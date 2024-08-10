@@ -1,11 +1,19 @@
 package org.example.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Car implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static int idCounter = 1;
 
     private int id;
     private String make;
@@ -16,66 +24,19 @@ public class Car implements Serializable {
     private boolean isAvailable;
 
     public Car(String make, String model, int year, double price, String condition) {
-        this.id = idCounter++;
         this.make = make;
         this.model = model;
         this.year = year;
         this.price = price;
         this.condition = condition;
-        this.isAvailable = true;
-    }
+        this.isAvailable = true; // По умолчанию
 
-    public int getId() {
-        return id;
-    }
-
-    public String getMake() {
-        return make;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public String getCondition() {
-        return condition;
     }
 
     public boolean isAvailable() {
         return isAvailable;
     }
 
-    public void setAvailable(boolean isAvailable) {
-        this.isAvailable = isAvailable;
-    }
-
-    public void setMake(String make) {
-        this.make = make;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public void setYear(int year) {
-        this.year = year;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public void setCondition(String condition) {
-        this.condition = condition;
-    }
 
     @Override
     public String toString() {

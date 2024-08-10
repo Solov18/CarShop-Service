@@ -3,9 +3,11 @@ package org.example.model;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
-@Getter
-public abstract class User {
+import java.io.Serializable;
+
+public abstract class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String username;
     private String password;
     private String role;
@@ -20,27 +22,16 @@ public abstract class User {
         return username;
     }
 
-    public boolean authenticate(String password) {
-        return this.password.equals(password);
+    public String getPassword() {
+        return password;
     }
 
     public String getRole() {
         return role;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public boolean hasRole(String role) {
-        return getRole().equalsIgnoreCase(role);
-    }
-
     @Override
     public String toString() {
-        return "Пользователь{" +
-                "Имя : " + username + '\'' +
-                ", Роль : " + getRole() + '\'' +
-                '}';
+        return "User {username='" + username + "', role='" + role + "'}";
     }
 }

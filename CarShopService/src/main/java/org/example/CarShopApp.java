@@ -1,619 +1,422 @@
 package org.example;
+import org.example.config.DatabaseConnectionManager;
 import org.example.controller.CarController;
 import org.example.controller.OrderController;
 import org.example.controller.UserController;
 import org.example.logi.AuditLog;
 import org.example.logi.AuditLogController;
 import org.example.model.*;
-import java.io.IOException;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import org.example.repository.CarRepository;
+import org.example.repository.OrderRepository;
+import org.example.repository.UserRepository;
+
+
 import java.util.List;
 import java.util.Scanner;
 
+import java.sql.SQLException;
+
+
 public class CarShopApp {
-    private static final String LINE_SEPARATOR = "ஜ___________________ஜ۩۞۩ஜ____________________ஜ";
-    private static final String SEPARATOR = "ஜ_________________________________________________ஜ";
-    private static final String HIGHLIGHT = "\u001B[33m";
-    private static final String ERROR = "\u001B[31m";
-    private static final String SUCCESS = "\u001B[32m";
-    private static final String RESET = "\u001B[0m";
+
+    private static final String LINE_SEPARATOR = "----------------------------";
+    private static final String HIGHLIGHT = "\033[1;34m";
+    private static final String RESET = "\033[0m";
+    private static final String SEPARATOR = "----------------------------";
+    private static final String SUCCESS = "\033[0;32m";
+    private static final String ERROR = "\033[0;31m";
 
     public static void main(String[] args) {
-        CarController carController = new CarController();
-        UserController userController = new UserController();
-        OrderController orderController = new OrderController(userController);
+
+        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
+
+
+        CarRepository carRepository = new CarRepository(dbConnectionManager);
+        UserRepository userRepository = new UserRepository(dbConnectionManager);
+        OrderRepository orderRepository = new OrderRepository(carRepository, userRepository, dbConnectionManager);
+
+        CarController carController = new CarController(carRepository);
+        OrderController orderController = new OrderController(orderRepository, new UserController(userRepository), carRepository);
+        UserController userController = new UserController(userRepository);
         AuditLogController auditLogController = new AuditLogController();
 
-        // Добавление пользователей для тестирования
-        userController.registerUser(new Admin("admin", "123"));
-        userController.registerUser(new Manager("manager", "123"));
-        userController.registerUser(new Client("client", "123", "client@carshop.com"));
-        userController.registerUser(new Client("client1", "123", "client1@carshop.com"));
-        userController.registerUser(new Client("client2", "123", "client2@carshop.com"));
+        // Добавление тестовых пользователей
+        addTestUsers(userController);
 
+        // Меню и взаимодействие с пользователем
         Scanner scanner = new Scanner(System.in);
-        boolean running = true;
-        User loggedInUser = null;
-
-        while (loggedInUser == null) {
-            System.out.println(LINE_SEPARATOR);
-            System.out.println(HIGHLIGHT + "          Аутентификация пользователя" + RESET);
-            System.out.println(SEPARATOR);
-            System.out.print("Введите имя пользователя: ");
-            String username = scanner.nextLine();
-            System.out.print("Введите пароль: ");
-            String password = scanner.nextLine();
-            loggedInUser = userController.authenticate(username, password);
-
-            if (loggedInUser == null) {
-                System.out.println(ERROR + "Ошибка аутентификации. Пользователь не найден." + RESET);
-                System.out.print("Хотите зарегистрироваться? (да/нет): ");
-                String response = scanner.nextLine();
-
-                if ("да".equalsIgnoreCase(response)) {
-                    registerNewUser(userController, auditLogController, scanner, null);
-                    System.out.println(HIGHLIGHT + "Попробуйте войти снова." + RESET);
-                } else {
-                    System.out.println("Завершение работы.");
-                    scanner.close();
-                    return;
-                }
-            } else {
-                auditLogController.logAction(loggedInUser.getUsername(), "вход в систему");
-            }
-        }
-
-        while (running) {
-            System.out.println(LINE_SEPARATOR);
-            System.out.println(HIGHLIGHT + "Меню пользователя: " + loggedInUser.getUsername() + RESET);
-            System.out.println(SEPARATOR);
-            System.out.println("1. Добавить автомобиль");
-            System.out.println("2. Показать все доступные автомобили");
-            System.out.println("3. Удалить автомобиль");
-            System.out.println("4. Обновить автомобиль");
-            System.out.println("5. Сохранить автомобили в файл");
-            System.out.println("6. Загрузить автомобили из файла");
-            System.out.println("7. Создать заказ");
-            System.out.println("8. Показать все заказы");
-            System.out.println("9. Обновить статус заказа");
-            System.out.println("10. Отменить заказ");
-            System.out.println("11. Показать всех пользователей");
-            System.out.println("12. Показать журнал действий");
-            System.out.println("13. Зарегистрировать нового пользователя");
-            System.out.println("14. Фильтр автомобилей по цене");
-            System.out.println("15. Фильтр автомобилей по году выпуска");
-            System.out.println("16. Поиск заказов по году и месяцу");
-            System.out.println("17. Поиск заказов по клиенту");
-            System.out.println("18. Поиск заказов по статусу");
-            System.out.println("19. Поиск заказов по автомобилю");
-            System.out.println("20. Фильтрация клиентов по имени");
-            System.out.println("21. Фильтрация клиентов по контактной информации");
-            System.out.println("22. Фильтрация клиентов по количеству заказов");
-            System.out.println("23. Сортировка клиентов по имени");
-            System.out.println("24. Сортировка клиентов по количеству заказов");
-            System.out.println("0. Выход");
-            System.out.print("Введите ваш выбор: ");
+        String username = "admin"; // Это может быть введено пользователем или выбрано из тестовых данных
+        while (true) {
+            showMenu();
             int choice = scanner.nextInt();
             scanner.nextLine();
-
-            switch (choice) {
-                case 1:
-                    if (!loggedInUser.hasRole("Admin") && !loggedInUser.hasRole("Manager")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+            try {
+                switch (choice) {
+                    case 1:
+                        //  добавления автомобиля
+                        addCar(carController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Добавление нового автомобиля" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите марку: ");
-                    String make = scanner.nextLine();
-                    System.out.print("Введите модель: ");
-                    String model = scanner.nextLine();
-                    System.out.print("Введите год: ");
-                    int year = scanner.nextInt();
-                    System.out.print("Введите цену: ");
-                    double price = scanner.nextDouble();
-                    scanner.nextLine();
-                    System.out.print("Введите состояние: ");
-                    String condition = scanner.nextLine();
-                    carController.addCar(make, model, year, price, condition);
-                    auditLogController.logAction(loggedInUser.getUsername(), "добавлен автомобиль: " + make + " " + model);
-                    System.out.println(SUCCESS + "Автомобиль успешно добавлен." + RESET);
-                    break;
-                case 2:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Список доступных автомобилей" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<Car> availableCars = carController.getAllAvailableCars();
-                    if (availableCars.isEmpty()) {
-                        System.out.println(ERROR + "Нет доступных автомобилей." + RESET);
-                    } else {
-                        for (Car car : availableCars) {
-                            System.out.println(car);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "просмотрены доступные автомобили");
-                    break;
-                case 3:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 2:
+                        // удаления автомобиля
+                        removeCar(carController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Удаление автомобиля" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите индекс автомобиля для удаления: ");
-                    int removeIndex = scanner.nextInt();
-                    scanner.nextLine();
-                    if (carController.removeCar(removeIndex)) {
-                        System.out.println(SUCCESS + "Автомобиль успешно удален." + RESET);
-                    } else {
-                        System.out.println(ERROR + "Автомобиль не найден." + RESET);
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "удален автомобиль с индексом: " + removeIndex);
-                    break;
-                case 4:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 3:
+                        //  обновления автомобиля
+                        updateCar(carController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Обновление автомобиля" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите индекс автомобиля для обновления: ");
-                    int updateIndex = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.print("Введите новую марку: ");
-                    String newMake = scanner.nextLine();
-                    System.out.print("Введите новую модель: ");
-                    String newModel = scanner.nextLine();
-                    System.out.print("Введите новый год: ");
-                    int newYear = scanner.nextInt();
-                    System.out.print("Введите новую цену: ");
-                    double newPrice = scanner.nextDouble();
-                    scanner.nextLine();
-                    System.out.print("Введите новое состояние: ");
-                    String newCondition = scanner.nextLine();
-                    if (carController.updateCar(updateIndex, newMake, newModel, newYear, newPrice, newCondition)) {
-                        System.out.println(SUCCESS + "Информация об автомобиле успешно обновлена." + RESET);
-                    } else {
-                        System.out.println(ERROR + "Автомобиль не найден." + RESET);
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "обновлен автомобиль с индексом: " + updateIndex);
-                    break;
-                case 5:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 4:
+                        //  создания заказа
+                        createOrder(orderController, carController, userController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Сохранение автомобилей в файл" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите имя файла для сохранения: ");
-                    String saveFilename = scanner.nextLine();
-                    try {
-                        carController.saveCarsToFile(saveFilename);
-                        System.out.println(SUCCESS + "Автомобили успешно сохранены." + RESET);
-                    } catch (IOException e) {
-                        System.out.println(ERROR + "Ошибка при сохранении автомобилей в файл: " + e.getMessage() + RESET);
-                    }
-                    break;
-                case 6:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 5:
+                        showAllOrders(orderController);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Загрузка автомобилей из файла " + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите имя файла для загрузки: ");
-                    String loadFilename = scanner.nextLine();
-                    try {
-                        carController.loadCarsFromFile(loadFilename);
-                        System.out.println(SUCCESS + "Автомобили успешно загружены." + RESET);
-                    } catch (IOException | ClassNotFoundException e) {
-                        System.out.println(ERROR + "Ошибка при загрузке автомобилей из файла: " + e.getMessage() + RESET);
-                    }
-                    break;
-                case 7:
-                    if (!loggedInUser.hasRole("Admin") && !loggedInUser.hasRole("Client")) {
-                        System.out.println(SEPARATOR);
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 6:
+                        updateOrderStatus(orderController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Создание заказа" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите имя пользователя клиента: ");
-                    String clientUsername = scanner.nextLine();
-                    Client client = (Client) userController.getAllUsers().stream()
-                            .filter(user -> user.getUsername().equals(clientUsername) && user instanceof Client)
-                            .findFirst()
-                            .orElse(null);
-                    if (client == null) {
-                        System.out.println(ERROR + "Клиент не найден." + RESET);
+                    case 7:
+                        cancelOrder(orderController, auditLogController, username, scanner);
                         break;
-                    }
-                    System.out.print("Введите индекс автомобиля для заказа: ");
-                    int carIndex = scanner.nextInt();
-                    scanner.nextLine();
-                    Car car = carController.getCarById(carIndex);
-                    if (car == null || !car.isAvailable()) {
-                        System.out.println(ERROR + "Автомобиль недоступен." + RESET);
+                    case 8:
+                        showAllUsers(userController);
                         break;
-                    }
-                    orderController.createOrder(car, client);
-                    auditLogController.logAction(loggedInUser.getUsername(), "создан заказ на автомобиль с индексом: " + carIndex);
-                    System.out.println(SUCCESS + "Заказ успешно создан." + RESET);
-                    break;
-
-                case 8:
-                    if (!loggedInUser.hasRole("Admin") && !loggedInUser.hasRole("Manager")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 9:
+                        filterClientsByName(userController, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Показать все заказы" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<Order> orders = orderController.getAllOrders();
-                    if (orders.isEmpty()) {
-                        System.out.println(ERROR + "Нет заказов." + RESET);
-                    } else {
-                        for (Order order : orders) {
-                            System.out.println(order);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "просмотрены все заказы");
-                    break;
-                case 9:
-                    if (!loggedInUser.hasRole("Admin") && !loggedInUser.hasRole("Manager")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 10:
+                        filterClientsByContactInfo(userController, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Обновление статуса заказа" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите ID заказа для обновления статуса: ");
-                    int orderId = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.print("Введите новый статус: ");
-                    String newStatus = scanner.nextLine();
-                    if (orderController.updateOrderStatus(orderId, newStatus)) {
-                        System.out.println(SUCCESS + "Статус заказа успешно обновлен." + RESET);
-                    } else {
-                        System.out.println(ERROR + "Заказ не найден." + RESET);
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "обновлен статус заказа с ID: " + orderId);
-                    break;
-                case 10:
-                    if (!loggedInUser.hasRole("Admin") && !loggedInUser.hasRole("Manager")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 11:
+                        sortClientsByName(userController);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Отмена заказа" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите ID заказа для отмены: ");
-                    int cancelOrderId = scanner.nextInt();
-                    scanner.nextLine();
-                    if (orderController.cancelOrder(cancelOrderId)) {
-                        System.out.println(SUCCESS + "Заказ успешно отменен." + RESET);
-                    } else {
-                        System.out.println(ERROR + "Заказ не найден." + RESET);
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "отменен заказ с ID: " + cancelOrderId);
-                    break;
-                case 11:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 12:
+                        filterClientsByOrders(userController, scanner);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Список всех пользователей" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<User> users = userController.getAllUsers();
-                    if (users.isEmpty()) {
-                        System.out.println(ERROR + "Нет зарегистрированных пользователей." + RESET);
-                    } else {
-                        for (User user : users) {
-                            System.out.println(user);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "просмотрены все пользователи");
-                    break;
-                case 12:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 13:
+                        sortClientsByOrders(userController);
                         break;
-                    }
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Журнал действий" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<AuditLog> logs = auditLogController.getAllLogs();
-                    if (logs.isEmpty()) {
-                        System.out.println(ERROR + "Журнал действий пуст." + RESET);
-                    } else {
-                        for (AuditLog log : logs) {
-                            System.out.println(log);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "просмотрен журнал действий");
-                    break;
-                case 13:
-                    if (!loggedInUser.hasRole("Admin")) {
-                        System.out.println(ERROR + "Недостаточно прав для выполнения этой операции." + RESET);
+                    case 14:
+                        registerNewUser(userController, scanner);
                         break;
-                    }
-                    registerNewUser(userController, auditLogController, scanner, loggedInUser);
-                    break;
-                case 14:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Фильтр автомобилей по цене" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите минимальную цену: ");
-                    double minPrice = scanner.nextDouble();
-                    System.out.print("Введите максимальную цену: ");
-                    double maxPrice = scanner.nextDouble();
-                    scanner.nextLine();
-                    List<Car> filteredCarsByPrice = carController.getCarsByPriceRange(minPrice, maxPrice);
-                    if (filteredCarsByPrice.isEmpty()) {
-                        System.out.println(ERROR + "Нет автомобилей в заданном ценовом диапазоне." + RESET);
-                    } else {
-                        for (Car cars : filteredCarsByPrice) {
-                            System.out.println(cars);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнен фильтр автомобилей по цене");
-                    break;
-                case 15:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Фильтр автомобилей по году выпуска" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите минимальный год выпуска: ");
-                    int minYear = scanner.nextInt();
-                    System.out.print("Введите максимальный год выпуска: ");
-                    int maxYear = scanner.nextInt();
-                    scanner.nextLine();
-                    List<Car> filteredCarsByYear = carController.getCarsByYearRange(minYear, maxYear);
-                    if (filteredCarsByYear.isEmpty()) {
-                        System.out.println(ERROR + "Нет автомобилей в заданном диапазоне годов выпуска." + RESET);
-                    } else {
-                        for (Car cars : filteredCarsByYear) {
-                            System.out.println(cars);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнен фильтр автомобилей по году выпуска");
-                    break;
-                case 16:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Поиск заказов по году и месяцу" + RESET);
-                    System.out.println(SEPARATOR);
-
-                    LocalDate startDate = null;
-                    LocalDate endDate = null;
-
-                    while (startDate == null) {
-                        System.out.print("Введите начальный год и месяц (гггг-мм): ");
-                        try {
-                            String input = scanner.nextLine();
-                            startDate = LocalDate.parse(input + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        } catch (DateTimeException e) {
-                            System.out.println(ERROR + "Неверный формат даты. Пожалуйста, используйте формат гггг-мм." + RESET);
-                        }
-                    }
-
-                    while (endDate == null) {
-                        System.out.print("Введите конечный год и месяц (гггг-мм): ");
-                        try {
-                            String input = scanner.nextLine();
-                            endDate = LocalDate.parse(input + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        } catch (DateTimeException e) {
-                            System.out.println(ERROR + "Неверный формат даты. Пожалуйста, используйте формат гггг-мм." + RESET);
-                        }
-                    }
-
-                    if (startDate.isAfter(endDate)) {
-                        System.out.println(ERROR + "Начальная дата не может быть позже конечной даты." + RESET);
-                    } else {
-                        LocalDate endOfMonthDate = endDate.withDayOfMonth(endDate.lengthOfMonth());
-                        List<Order> ordersByDate = orderController.getOrdersByDateRange(startDate.atStartOfDay(), endOfMonthDate.atTime(23, 59, 59));
-                        if (ordersByDate.isEmpty()) {
-                            System.out.println(ERROR + "Нет заказов в заданном диапазоне дат." + RESET);
-                        } else {
-                            for (Order order : ordersByDate) {
-                                System.out.println(order);
-                            }
-                        }
-                        auditLogController.logAction(loggedInUser.getUsername(), "выполнен поиск заказов по году и месяцу");
-                    }
-                    break;
-                case 17:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Поиск заказов по клиенту" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите имя пользователя клиента: ");
-                    String searchClientUsername = scanner.nextLine();
-                    List<Order> ordersByClient = orderController.getOrdersByClient(searchClientUsername);
-                    if (ordersByClient.isEmpty()) {
-                        System.out.println(ERROR + "Нет заказов для указанного клиента." + RESET);
-                    } else {
-                        for (Order order : ordersByClient) {
-                            System.out.println(order);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнен поиск заказов по клиенту");
-                    break;
-                case 18:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Поиск заказов по статусу" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите статус заказа: ");
-                    String searchStatus = scanner.nextLine();
-                    List<Order> ordersByStatus = orderController.getOrdersByStatus(searchStatus);
-                    if (ordersByStatus.isEmpty()) {
-                        System.out.println(ERROR + "Нет заказов с указанным статусом." + RESET);
-                    } else {
-                        for (Order order : ordersByStatus) {
-                            System.out.println(order);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнен поиск заказов по статусу");
-                    break;
-                case 19:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Поиск заказов по автомобилю" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите ID автомобиля: ");
-                    int searchCarId = scanner.nextInt();
-                    scanner.nextLine();
-                    List<Order> ordersByCar = orderController.getOrdersByCar(searchCarId);
-                    if (ordersByCar.isEmpty()) {
-                        System.out.println(ERROR + "Нет заказов для указанного автомобиля." + RESET);
-                    } else {
-                        for (Order order : ordersByCar) {
-                            System.out.println(order);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнен поиск заказов по автомобилю");
-                    break;
-                case 20:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Фильтрация клиентов по имени" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите имя для фильтрации: ");
-                    String filterName = scanner.nextLine();
-                    List<Client> filteredClientsByName = userController.filterClientsByName(filterName);
-                    if (filteredClientsByName.isEmpty()) {
-                        System.out.println(ERROR + "Нет клиентов с указанным именем." + RESET);
-                    } else {
-                        for (Client clientByName : filteredClientsByName) {
-                            System.out.println(clientByName);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнена фильтрация клиентов по имени");
-                    break;
-
-                case 21:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Фильтрация клиентов по контактной информации" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите контактную информацию для фильтрации: ");
-                    String filterContactInfo = scanner.nextLine();
-                    List<Client> filteredClientsByContact = userController.filterClientsByContactInfo(filterContactInfo);
-                    if (filteredClientsByContact.isEmpty()) {
-                        System.out.println(ERROR + "Нет клиентов с указанной контактной информацией." + RESET);
-                    } else {
-                        for (Client clientByContact : filteredClientsByContact) {
-                            System.out.println(clientByContact);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнена фильтрация клиентов по контактной информации");
-                    break;
-
-                case 22:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Фильтрация клиентов по количеству заказов" + RESET);
-                    System.out.println(SEPARATOR);
-                    System.out.print("Введите минимальное количество заказов: ");
-                    int minOrders = scanner.nextInt();
-                    System.out.print("Введите максимальное количество заказов: ");
-                    int maxOrders = scanner.nextInt();
-                    scanner.nextLine();
-                    List<Client> filteredClientsByOrders = userController.filterClientsByOrders(minOrders, maxOrders);
-                    if (filteredClientsByOrders.isEmpty()) {
-                        System.out.println(ERROR + "Нет клиентов в указанном диапазоне количества заказов." + RESET);
-                    } else {
-                        for (Client clientByOrders : filteredClientsByOrders) {
-                            System.out.println(clientByOrders);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнена фильтрация клиентов по количеству заказов");
-                    break;
-
-                case 23:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Сортировка клиентов по имени" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<Client> sortedClientsByName = userController.sortClientsByName();
-                    if (sortedClientsByName.isEmpty()) {
-                        System.out.println(ERROR + "Нет клиентов для сортировки." + RESET);
-                    } else {
-                        for (Client clientByName : sortedClientsByName) {
-                            System.out.println(clientByName);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнена сортировка клиентов по имени");
-                    break;
-
-                case 24:
-                    System.out.println(LINE_SEPARATOR);
-                    System.out.println(HIGHLIGHT + "Сортировка клиентов по количеству заказов" + RESET);
-                    System.out.println(SEPARATOR);
-                    List<Client> sortedClientsByOrders = userController.sortClientsByOrders();
-                    if (sortedClientsByOrders.isEmpty()) {
-                        System.out.println(ERROR + "Нет клиентов для сортировки." + RESET);
-                    } else {
-                        for (Client clientByOrders : sortedClientsByOrders) {
-                            System.out.println(clientByOrders);
-                        }
-                    }
-                    auditLogController.logAction(loggedInUser.getUsername(), "выполнена сортировка клиентов по количеству заказов");
-                    break;
-                case 0:
-                    running = false;
-                    auditLogController.logAction(loggedInUser.getUsername(), "выход из системы");
-                    System.out.println(SUCCESS + "Выход из системы. До свидания!" + RESET);
-                    break;
-                default:
-                    System.out.println(ERROR + "Недопустимый выбор. Попробуйте еще раз." + RESET);
-                    break;
+                    case 15:
+                        showAuditLogs(auditLogController);
+                        break;
+                    case 0:
+                        System.out.println("Выход из программы.");
+                        return;
+                    default:
+                        System.out.println(ERROR + "Неверный выбор. Попробуйте снова." + RESET);
+                }
+            } catch (SQLException e) {
+                System.out.println(ERROR + "Ошибка базы данных: " + e.getMessage() + RESET);
             }
         }
-
-        scanner.close();
     }
 
-    public static void registerNewUser(UserController userController, AuditLogController auditLogController, Scanner scanner, User loggedInUser) {
+    private static void addTestUsers(UserController userController) {
+        try {
+            // Создание и регистрация тестовых пользователей
+            User admin = new Admin("admin", "adminpass");
+            User manager = new Manager("manager", "managerpass");
+            Client client1 = new Client("client1", "client1pass", "1233@mail.ru");
+            Client client2 = new Client("client2", "client2pass", "123@mail.ru");
+
+            userController.registerUser(admin);
+            userController.registerUser(manager);
+            userController.registerUser(client1);
+            userController.registerUser(client2);
+
+            System.out.println(SUCCESS + "Тестовые пользователи успешно добавлены." + RESET);
+        } catch (SQLException e) {
+            System.out.println(ERROR + "Ошибка при добавлении тестовых пользователей: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static void showMenu() {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Главное меню" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.println("1. Добавить автомобиль");
+        System.out.println("2. Удалить автомобиль");
+        System.out.println("3. Обновить информацию об автомобиле");
+        System.out.println("4. Создать заказ");
+        System.out.println("5. Показать все заказы");
+        System.out.println("6. Обновить статус заказа");
+        System.out.println("7. Отменить заказ");
+        System.out.println("8. Показать всех пользователей");
+        System.out.println("9. Фильтрация клиентов по имени");
+        System.out.println("10. Фильтрация клиентов по контактной информации");
+        System.out.println("11. Сортировка клиентов по имени");
+        System.out.println("12. Фильтрация клиентов по количеству заказов");
+        System.out.println("13. Сортировка клиентов по количеству заказов");
+        System.out.println("14. Регистрация нового пользователя");
+        System.out.println("15. Показать журнал аудита");
+        System.out.println("0. Выход");
+        System.out.println(SEPARATOR);
+        System.out.print("Выберите действие: ");
+    }
+
+    private static void addCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Добавление нового автомобиля" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите марку: ");
+        String make = scanner.nextLine();
+        System.out.print("Введите модель: ");
+        String model = scanner.nextLine();
+        System.out.print("Введите год: ");
+        int year = scanner.nextInt();
+        System.out.print("Введите цену: ");
+        double price = scanner.nextDouble();
+        scanner.nextLine();
+        System.out.print("Введите состояние: ");
+        String condition = scanner.nextLine();
+        carController.addCar(make, model, year, price, condition);
+        auditLogController.logAction(username, "Добавил автомобиль: " + make + " " + model);
+        System.out.println(SUCCESS + "Автомобиль успешно добавлен." + RESET);
+    }
+
+    private static void showAvailableCars(CarController carController) {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Список доступных автомобилей" + RESET);
+        System.out.println(SEPARATOR);
+        List<Car> availableCars = carController.getAllAvailableCars();
+        if (availableCars.isEmpty()) {
+            System.out.println(ERROR + "Нет доступных автомобилей." + RESET);
+        } else {
+            availableCars.forEach(System.out::println);
+        }
+    }
+
+    private static void removeCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Удаление автомобиля" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите ID автомобиля для удаления: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        boolean removed = carController.removeCar(id);
+        if (removed) {
+            auditLogController.logAction(username, "Удалил автомобиль с ID: " + id);
+            System.out.println(SUCCESS + "Автомобиль успешно удален." + RESET);
+        } else {
+            System.out.println(ERROR + "Не удалось удалить автомобиль." + RESET);
+        }
+    }
+
+    private static void updateCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Обновление информации об автомобиле" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите ID автомобиля для обновления: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+        Car existingCar = carController.getCarById(id);
+        System.out.print("Введите новую марку (текущая: " + existingCar.getMake() + "): ");
+        String newMake = scanner.nextLine();
+        System.out.print("Введите новую модель (текущая: " + existingCar.getModel() + "): ");
+        String newModel = scanner.nextLine();
+        System.out.print("Введите новый год (текущий: " + existingCar.getYear() + "): ");
+        int newYear = scanner.nextInt();
+        System.out.print("Введите новую цену (текущая: " + existingCar.getPrice() + "): ");
+        double newPrice = scanner.nextDouble();
+        scanner.nextLine();
+        System.out.print("Введите новое состояние (текущее: " + existingCar.getCondition() + "): ");
+        String newCondition = scanner.nextLine();
+        Car updatedCar = new Car(newMake, newModel, newYear, newPrice, newCondition);
+        boolean updated = carController.updateCar(updatedCar);
+        if (updated) {
+            auditLogController.logAction(username, "Обновил автомобиль с ID: " + id);
+            System.out.println(SUCCESS + "Автомобиль успешно обновлен." + RESET);
+        } else {
+            System.out.println(ERROR + "Не удалось обновить автомобиль." + RESET);
+        }
+    }
+
+    private static void createOrder(OrderController orderController, CarController carController, UserController userController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Создание нового заказа" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите ID автомобиля для заказа: ");
+        int carId = scanner.nextInt();
+        scanner.nextLine();
+        Car car = carController.getCarById(carId);
+        if (car == null || !car.isAvailable()) {
+            System.out.println(ERROR + "Автомобиль не доступен для заказа." + RESET);
+            return;
+        }
+        System.out.print("Введите имя клиента: ");
+        String clientUsername = scanner.nextLine();
+        Client client = (Client) userController.authenticate(clientUsername, null);
+        if (client == null) {
+            System.out.println(ERROR + "Клиент не найден." + RESET);
+            return;
+        }
+        Order order = orderController.createOrder(car, client);
+        auditLogController.logAction(username, "Создал заказ с ID: " + order.getId() + " для клиента: " + clientUsername);
+        System.out.println(SUCCESS + "Заказ успешно создан с ID: " + order.getId() + RESET);
+    }
+
+    private static void showAllOrders(OrderController orderController) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Список всех заказов" + RESET);
+        System.out.println(SEPARATOR);
+        List<Order> orders = orderController.getAllOrders();
+        if (orders.isEmpty()) {
+            System.out.println(ERROR + "Нет заказов." + RESET);
+        } else {
+            orders.forEach(System.out::println);
+        }
+    }
+
+    private static void updateOrderStatus(OrderController orderController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Обновление статуса заказа" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите ID заказа для обновления: ");
+        int orderId = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Введите новый статус: ");
+        String status = scanner.nextLine();
+        boolean updated = orderController.updateOrderStatus(orderId, status);
+        if (updated) {
+            auditLogController.logAction(username, "Обновил статус заказа с ID: " + orderId + " на: " + status);
+            System.out.println(SUCCESS + "Статус заказа успешно обновлен." + RESET);
+        } else {
+            System.out.println(ERROR + "Не удалось обновить статус заказа." + RESET);
+        }
+    }
+
+    private static void cancelOrder(OrderController orderController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Отмена заказа" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите ID заказа для отмены: ");
+        int orderId = scanner.nextInt();
+        scanner.nextLine();
+        boolean cancelled = orderController.cancelOrder(orderId);
+        if (cancelled) {
+            auditLogController.logAction(username, "Отменил заказ с ID: " + orderId);
+            System.out.println(SUCCESS + "Заказ успешно отменен." + RESET);
+        } else {
+            System.out.println(ERROR + "Не удалось отменить заказ." + RESET);
+        }
+    }
+
+    private static void showAllUsers(UserController userController) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Список всех пользователей" + RESET);
+        System.out.println(SEPARATOR);
+        List<User> users = userController.getAllUsers();
+        if (users.isEmpty()) {
+            System.out.println(ERROR + "Нет пользователей." + RESET);
+        } else {
+            users.forEach(System.out::println);
+        }
+    }
+
+    private static void filterClientsByName(UserController userController, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Фильтрация клиентов по имени" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите имя клиента: ");
+        String name = scanner.nextLine();
+        List<Client> clients = userController.filterClientsByName(name);
+        if (clients.isEmpty()) {
+            System.out.println(ERROR + "Нет клиентов с таким именем." + RESET);
+        } else {
+            clients.forEach(System.out::println);
+        }
+    }
+
+    private static void filterClientsByContactInfo(UserController userController, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Фильтрация клиентов по контактной информации" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите контактную информацию: ");
+        String contactInfo = scanner.nextLine();
+        List<Client> clients = userController.filterClientsByContactInfo(contactInfo);
+        if (clients.isEmpty()) {
+            System.out.println(ERROR + "Нет клиентов с такой контактной информацией." + RESET);
+        } else {
+            clients.forEach(System.out::println);
+        }
+    }
+
+    private static void sortClientsByName(UserController userController) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Сортировка клиентов по имени" + RESET);
+        System.out.println(SEPARATOR);
+        List<Client> clients = userController.sortClientsByName();
+        clients.forEach(System.out::println);
+    }
+
+    private static void filterClientsByOrders(UserController userController, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Фильтрация клиентов по количеству заказов" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите минимальное количество заказов: ");
+        int minOrders = scanner.nextInt();
+        System.out.print("Введите максимальное количество заказов: ");
+        int maxOrders = scanner.nextInt();
+        scanner.nextLine();
+        List<Client> clients = userController.filterClientsByOrders(minOrders, maxOrders);
+        if (clients.isEmpty()) {
+            System.out.println(ERROR + "Нет клиентов с таким количеством заказов." + RESET);
+        } else {
+            clients.forEach(System.out::println);
+        }
+    }
+
+    private static void sortClientsByOrders(UserController userController) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Сортировка клиентов по количеству заказов" + RESET);
+        System.out.println(SEPARATOR);
+        List<Client> clients = userController.sortClientsByOrders();
+        clients.forEach(System.out::println);
+    }
+
+    private static void registerNewUser(UserController userController, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Регистрация нового пользователя" + RESET);
         System.out.println(SEPARATOR);
-        System.out.print("Введите тип пользователя (Admin, Manager, Client): ");
-        String userType = scanner.nextLine();
         System.out.print("Введите имя пользователя: ");
-        String newUserUsername = scanner.nextLine();
-        System.out.print("Введите пароль пользователя: ");
-        String newUserPassword = scanner.nextLine();
+        String username = scanner.nextLine();
+        System.out.print("Введите пароль: ");
+        String password = scanner.nextLine();
+        System.out.print("Введите тип пользователя (Admin/Manager/Client): ");
+        String userType = scanner.nextLine();
 
-        User newUser;
-        switch (userType.trim()) {
-            case "Admin":
-                newUser = new Admin(newUserUsername, newUserPassword);
-                break;
-            case "Manager":
-                newUser = new Manager(newUserUsername, newUserPassword);
-                break;
-            case "Client":
+        User user;
+        switch (userType.trim().toLowerCase()) {
+            case "client":
                 System.out.print("Введите контактную информацию клиента: ");
                 String contactInfo = scanner.nextLine();
-
-                newUser = new Client(newUserUsername, newUserPassword, contactInfo);
+                user = new Client(username, password, contactInfo);
+                break;
+            case "admin":
+                user = new Admin(username, password);
+                break;
+            case "manager":
+                user = new Manager(username, password);
                 break;
             default:
-                System.out.println(ERROR + "Некорректный тип пользователя." + RESET);
+                System.out.println("Неверный тип пользователя. Используйте Admin, Manager или Client.");
                 return;
         }
+        userController.registerUser(user);
+        System.out.println(SUCCESS + "Пользователь успешно зарегистрирован." + RESET);
+    }
 
-        if (userController.userExists(newUserUsername)) {
-            System.out.println(ERROR + "Пользователь с таким именем уже существует." + RESET);
-            return;
+    private static void showAuditLogs(AuditLogController auditLogController) {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Журнал аудита" + RESET);
+        System.out.println(SEPARATOR);
+        List<AuditLog> logs = auditLogController.getAllLogs();
+        if (logs.isEmpty()) {
+            System.out.println(ERROR + "Нет записей в журнале аудита." + RESET);
+        } else {
+            logs.forEach(System.out::println);
         }
-
-        userController.registerUser(newUser);
-        if (loggedInUser != null) {
-            auditLogController.logAction(loggedInUser.getUsername(), "зарегистрирован новый пользователь: " + newUserUsername);
-        }
-        System.out.println(SUCCESS + "Новый пользователь успешно зарегистрирован." + RESET);
     }
 }

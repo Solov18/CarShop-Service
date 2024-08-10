@@ -1,52 +1,37 @@
 package org.example.model;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Order implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private static int idCounter = 0;
+@Getter
+@Setter
+public class Order {
     private int id;
     private Car car;
     private Client client;
+    private String status;
     private LocalDateTime date;
-    private String status; // statuses: created, confirmed, completed, cancelled
 
     public Order(Car car, Client client) {
-        this.id = idCounter++;
         this.car = car;
         this.client = client;
         this.status = "created";
         this.date = LocalDateTime.now();
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public Car getCar() {
-        return car;
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
+    // Конструктор для чтения из базы данных
+    public Order(int id, Car car, Client client, String status, LocalDateTime date) {
+        this.id = id;
+        this.car = car;
+        this.client = client;
         this.status = status;
-    }
-
-    public LocalDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDateTime date) {
         this.date = date;
     }
+
 
     @Override
     public String toString() {

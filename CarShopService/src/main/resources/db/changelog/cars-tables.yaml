@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "car_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "cars"
+            columns:
+              - column:
+                  name: "id"
+                  type: "int"
+                  defaultValueSequenceNext: "car_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "make"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "model"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "year"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "price"
+                  type: "decimal(10,2)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "condition"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "is_available"
+                  type: "boolean"
+                  constraints:
+                    nullable: false

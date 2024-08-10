@@ -1,0 +1,140 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: "your_name"
+      changes:
+        - insert:
+            tableName: "users"
+            columns:
+              - column:
+                  name: "id"
+                  value: "1"  # Установите идентификаторы явно или используйте последовательность
+              - column:
+                  name: "username"
+                  value: "john_doe"
+              - column:
+                  name: "password"
+                  value: "password123"
+              - column:
+                  name: "role"
+                  value: "admin"
+              - column:
+                  name: "contact_info"
+                  value: "john.doe@example.com"
+
+        - insert:
+            tableName: "users"
+            columns:
+              - column:
+                  name: "id"
+                  value: "2"  # Установите идентификаторы явно или используйте последовательность
+              - column:
+                  name: "username"
+                  value: "jane_smith"
+              - column:
+                  name: "password"
+                  value: "password456"
+              - column:
+                  name: "role"
+                  value: "client"
+              - column:
+                  name: "contact_info"
+                  value: "jane.smith@example.com"
+
+  - changeSet:
+      id: "2"
+      author: "your_name"
+      changes:
+        - insert:
+            tableName: "cars"
+            columns:
+              - column:
+                  name: "id"
+                  value: "1"  # Убедитесь, что идентификатор существует
+              - column:
+                  name: "make"
+                  value: "Toyota"
+              - column:
+                  name: "model"
+                  value: "Corolla"
+              - column:
+                  name: "year"
+                  value: "2020"
+              - column:
+                  name: "price"
+                  value: "20000.00"
+              - column:
+                  name: "condition"
+                  value: "New"
+              - column:
+                  name: "is_available"
+                  value: "true"
+
+        - insert:
+            tableName: "cars"
+            columns:
+              - column:
+                  name: "id"
+                  value: "2"  # Убедитесь, что идентификатор существует
+              - column:
+                  name: "make"
+                  value: "Honda"
+              - column:
+                  name: "model"
+                  value: "Civic"
+              - column:
+                  name: "year"
+                  value: "2019"
+              - column:
+                  name: "price"
+                  value: "18000.00"
+              - column:
+                  name: "condition"
+                  value: "Used"
+              - column:
+                  name: "is_available"
+                  value: "true"
+
+  - changeSet:
+      id: "3"
+      author: "your_name"
+      changes:
+        - insert:
+            tableName: "admins"
+            columns:
+              - column:
+                  name: "user_id"
+                  value: "1"  # Убедитесь, что идентификатор существует
+              - column:
+                  name: "admin_specific_field"
+                  value: "Admin-specific info"
+
+        - insert:
+            tableName: "clients"
+            columns:
+              - column:
+                  name: "user_id"
+                  value: "2"  # Убедитесь, что идентификатор существует
+              - column:
+                  name: "client_specific_field"
+                  value: "Client-specific info"
+
+  - changeSet:
+      id: "4"
+      author: "your_name"
+      changes:
+        - insert:
+            tableName: "orders"
+            columns:
+              - column:
+                  name: "car_id"
+                  value: "1"  # Убедитесь, что этот идентификатор существует в таблице `cars`
+              - column:
+                  name: "client_id"
+                  value: "2"  # Убедитесь, что этот идентификатор существует в таблице `clients`
+              - column:
+                  name: "status"
+                  value: "created"
+              - column:
+                  name: "date"
+                  value: "2024-08-10T13:00:00"
