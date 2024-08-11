@@ -27,25 +27,83 @@ public class CarShopApp {
     private static final String ERROR = "\033[0;31m";
 
     public static void main(String[] args) {
-
         DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-
 
         CarRepository carRepository = new CarRepository(dbConnectionManager);
         UserRepository userRepository = new UserRepository(dbConnectionManager);
         OrderRepository orderRepository = new OrderRepository(carRepository, userRepository, dbConnectionManager);
 
         CarController carController = new CarController(carRepository);
-        OrderController orderController = new OrderController(orderRepository, new UserController(userRepository), carRepository);
         UserController userController = new UserController(userRepository);
+        OrderController orderController = new OrderController(orderRepository, userController, carRepository);
         AuditLogController auditLogController = new AuditLogController();
 
-        // Добавление тестовых пользователей
-//        addTestUsers(userController);
-
-        // Меню и взаимодействие с пользователем
         Scanner scanner = new Scanner(System.in);
-        String username = "admin"; // Это может быть введено пользователем или выбрано из тестовых данных
+        String username = "";
+
+        while (true) {
+            showAuthMenu();
+            int authChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            try {
+                switch (authChoice) {
+                    case 1:
+                        // Authentication
+                        username = authenticateUser(userController, scanner);
+                        if (username == null) {
+                            System.out.println(ERROR + "Аутентификация не удалась. Попробуйте снова." + RESET);
+                        } else {
+                            System.out.println(SUCCESS + "Аутентификация успешна. Добро пожаловать, " + username + "!" + RESET);
+                            mainMenu(scanner, carController, userController, orderController, auditLogController, username);
+                            return; // Exit the authentication loop
+                        }
+                        break;
+                    case 2:
+                        // Registration
+                        registerNewUser(userController, scanner);
+                        break;
+                    case 0:
+                        System.out.println("Выход из программы.");
+                        return;
+                    default:
+                        System.out.println(ERROR + "Неверный выбор. Попробуйте снова." + RESET);
+                }
+            } catch (SQLException e) {
+                System.out.println(ERROR + "Ошибка базы данных: " + e.getMessage() + RESET);
+            }
+        }
+    }
+
+    private static void showAuthMenu() {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Меню аутентификации" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.println("1. Войти");
+        System.out.println("2. Зарегистрироваться");
+        System.out.println("0. Выход");
+        System.out.println(SEPARATOR);
+        System.out.print("Выберите действие: ");
+    }
+
+    private static String authenticateUser(UserController userController, Scanner scanner) throws SQLException {
+        System.out.println(LINE_SEPARATOR);
+        System.out.println(HIGHLIGHT + "Аутентификация" + RESET);
+        System.out.println(SEPARATOR);
+        System.out.print("Введите имя пользователя: ");
+        String username = scanner.nextLine();
+        System.out.print("Введите пароль: ");
+        String password = scanner.nextLine();
+
+        User user = userController.authenticate(username, password);
+        if (user != null) {
+            return username;
+        } else {
+            return null;
+        }
+    }
+
+    private static void mainMenu(Scanner scanner, CarController carController, UserController userController, OrderController orderController, AuditLogController auditLogController, String username) throws SQLException {
         while (true) {
             showMenu();
             int choice = scanner.nextInt();
@@ -53,22 +111,18 @@ public class CarShopApp {
             try {
                 switch (choice) {
                     case 1:
-                        //  добавления автомобиля
                         addCar(carController, auditLogController, username, scanner);
                         break;
                     case 2:
-                        // удаления автомобиля
                         removeCar(carController, auditLogController, username, scanner);
                         break;
                     case 3:
                         showAvailableCars(carController);
                         break;
                     case 4:
-                        //  обновления автомобиля
                         updateCar(carController, auditLogController, username, scanner);
                         break;
                     case 5:
-                        //  создания заказа
                         createOrder(orderController, carController, userController, auditLogController, username, scanner);
                         break;
                     case 6:

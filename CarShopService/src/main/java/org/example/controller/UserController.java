@@ -20,7 +20,19 @@ public class UserController {
 
     // Аутентификация пользователя
     public User authenticate(String username, String password) throws SQLException {
+
         User user = userRepository.getUserByUsername(username);
+
+
+        if (user != null) {
+            System.out.println("User found: " + user.getUsername());
+            System.out.println("Stored password: " + user.getPassword());
+            System.out.println("Provided password: " + password);
+        } else {
+            System.out.println("User not found: " + username);
+        }
+
+
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }

@@ -48,14 +48,27 @@ public class UserRepository {
             if (resultSet.next()) {
                 String password = resultSet.getString("password");
                 String role = resultSet.getString("role");
-                switch (role) {
-                    case "Admin":
+                String contactInfo = resultSet.getString("contact_info");
+
+
+                System.out.println("Found user: " + username);
+                System.out.println("Password: " + password);
+                System.out.println("Role: " + role);
+                System.out.println("Contact Info: " + contactInfo);
+
+                // Сопоставление роли
+                switch (role.toLowerCase()) {
+                    case "admin":
                         return new Admin(username, password);
-                    case "Client":
-                        return new Client(username, password, resultSet.getString("contact_info"));
-                    case "Manager":
+                    case "client":
+                        return new Client(username, password, contactInfo);
+                    case "manager":
                         return new Manager(username, password);
+                    default:
+                        System.out.println("Unknown role: " + role);
                 }
+            } else {
+                System.out.println("User not found: " + username);
             }
         } catch (SQLException e) {
             System.err.println("Ошибка при получении пользователя по username: " + e.getMessage());
