@@ -245,4 +245,30 @@ public class CarRepository {
         }
         return cars;
     }
+    // Получение автомобиля по марке и модели
+    public Optional<Car> getCarByMakeAndModel(String make, String model) {
+        String sql = "SELECT * FROM cars WHERE make = ? AND model = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, make);
+            preparedStatement.setString(2, model);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(new Car(
+                            resultSet.getInt("id"),
+                            resultSet.getString("make"),
+                            resultSet.getString("model"),
+                            resultSet.getInt("year"),
+                            resultSet.getDouble("price"),
+                            resultSet.getString("condition"),
+                            resultSet.getBoolean("is_available")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка при выполнении запроса на получение автомобиля: " + e.getMessage());
+            throw new RuntimeException("Не удалось выполнить запрос на получение автомобиля", e);
+        }
+        return Optional.empty();
+    }
 }

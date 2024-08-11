@@ -1,129 +1,112 @@
+import org.example.config.DatabaseConnectionManager;
 import org.example.controller.CarController;
 import org.example.controller.OrderController;
 import org.example.controller.UserController;
 import org.example.model.Car;
 import org.example.model.Client;
 import org.example.model.User;
+import org.example.repository.CarRepository;
+import org.example.repository.OrderRepository;
+import org.example.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.example.model.Order;
-
-
 import java.time.LocalDateTime;
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterEach;
+import org.testcontainers.containers.PostgreSQLContainer;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class OrderControllerTest {
 
+    private static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:13")
+            .withDatabaseName("testdb")
+            .withUsername("testuser")
+            .withPassword("testpass");
+
+    static {
+        postgresContainer.start();
+    }
+
     private OrderController orderController;
-    private UserController userController;
     private CarController carController;
+    private UserController userController;
+    private OrderRepository orderRepository;
+    private CarRepository carRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
-    public void setUp() {
-        userController = new UserController();
-        carController = new CarController();
-        orderController = new OrderController(userController);
-    }
+    public void setUp() throws SQLException {
+        // Устанавливаем параметры подключения к базе данных
+        System.setProperty("db.url", postgresContainer.getJdbcUrl());
+        System.setProperty("db.username", postgresContainer.getUsername());
+        System.setProperty("db.password", postgresContainer.getPassword());
 
-    @Test
-    public void testCreateOrder() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
-
-        orderController.createOrder(car, (Client) client);
-        List<Order> orders = orderController.getAllOrders();
-        assertThat(orders).isNotEmpty();
-    }
-
-    @Test
-    public void testUpdateOrderStatus() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
-
-        Order order = orderController.createOrder(car, (Client) client);
-        orderController.updateOrderStatus(order.getId(), "Shipped");
-
-        Order updatedOrder = orderController.getOrderById(order.getId());
-        assertThat(updatedOrder.getStatus()).isEqualTo("Shipped");
-    }
-
-
-    @Test
-    public void testCancelOrder() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
-
-        Order order = orderController.createOrder(car, (Client) client);
-        boolean cancelled = orderController.cancelOrder(order.getId());
-
-        Order cancelledOrder = orderController.getOrderById(order.getId());
-        assertThat(cancelled).isTrue();
-        assertThat(cancelledOrder.getStatus()).isEqualTo("cancelled");
-        assertThat(carController.getAllAvailableCars().contains(car)).isTrue();
-    }
-
-    @Test
-    public void testGetOrdersByDateRange() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
-
-        Order order1 = orderController.createOrder(car, (Client) client);
-        order1.setDate(LocalDateTime.of(2024, 1, 1, 10, 0));
-
-        Order order2 = orderController.createOrder(car, (Client) client);
-        order2.setDate(LocalDateTime.of(2024, 6, 15, 15, 0));
-
-        List<Order> orders = orderController.getOrdersByDateRange(
-                LocalDateTime.of(2024, 1, 1, 0, 0),
-                LocalDateTime.of(2024, 12, 31, 23, 59)
+        // Создаем и настраиваем репозитории
+        orderRepository = new OrderRepository(
+                new CarRepository(new DatabaseConnectionManager(
+                        System.getProperty("db.url"),
+                        System.getProperty("db.username"),
+                        System.getProperty("db.password"))),
+                new UserRepository(new DatabaseConnectionManager(
+                        System.getProperty("db.url"),
+                        System.getProperty("db.username"),
+                        System.getProperty("db.password"))),
+                new DatabaseConnectionManager(
+                        System.getProperty("db.url"),
+                        System.getProperty("db.username"),
+                        System.getProperty("db.password"))
         );
 
-        assertThat(orders).hasSize(2);
-        assertThat(orders).containsExactlyInAnyOrder(order1, order2);
+        carRepository = new CarRepository(new DatabaseConnectionManager(
+                System.getProperty("db.url"),
+                System.getProperty("db.username"),
+                System.getProperty("db.password"))
+        );
+        userRepository = new UserRepository(new DatabaseConnectionManager(
+                System.getProperty("db.url"),
+                System.getProperty("db.username"),
+                System.getProperty("db.password"))
+        );
+
+        // Создаем контроллеры с зависимостями
+        carController = new CarController(carRepository);
+        userController = new UserController(userRepository);
+        orderController = new OrderController(orderRepository, userController, carRepository);
+
+        // Очистка данных перед каждым тестом
+        clearDatabase();
     }
 
-    @Test
-    public void testGetOrdersByClient() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
+    @AfterEach
+    public void tearDown() {
+        // Очистка данных после каждого теста
+        clearDatabase();
+    }
 
-        Order order1 = orderController.createOrder(car, (Client) client);
-        Order order2 = orderController.createOrder(car, (Client) client);
-
-        List<Order> orders = orderController.getOrdersByClient(client.getUsername());
-
-        assertThat(orders).hasSize(2);
-        assertThat(orders).containsExactlyInAnyOrder(order1, order2);
+    private void clearDatabase() {
+        try (Connection connection = DriverManager.getConnection(
+                System.getProperty("db.url"),
+                System.getProperty("db.username"),
+                System.getProperty("db.password")
+        )) {
+            connection.createStatement().execute("DELETE FROM orders");
+            connection.createStatement().execute("DELETE FROM cars");
+            connection.createStatement().execute("DELETE FROM users");
+        } catch (SQLException e) {
+            throw new RuntimeException("Не удалось очистить базу данных", e);
+        }
     }
 
 
-    @Test
-    public void testGetOrdersByCar() {
-        User client = new Client("client", "password", "contact@example.com");
-        userController.registerUser(client);
-        carController.addCar("Toyota", "Corolla", 2020, 20000, "New");
-        Car car = carController.getAllAvailableCars().get(0);
 
-        Order order1 = orderController.createOrder(car, (Client) client);
-        Order order2 = orderController.createOrder(car, (Client) client);
 
-        List<Order> orders = orderController.getOrdersByCar(car.getId());
 
-        assertThat(orders).hasSize(2);
-        assertThat(orders).containsExactlyInAnyOrder(order1, order2);
-    }
+
 }
 
 

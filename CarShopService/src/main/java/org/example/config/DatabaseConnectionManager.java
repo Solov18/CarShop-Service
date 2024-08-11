@@ -29,6 +29,12 @@ public class DatabaseConnectionManager {
         }
     }
 
+    public DatabaseConnectionManager(String url, String username, String password) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+    }
+
     public Connection getConnection() throws SQLException {
         if (url == null || username == null || password == null) {
             throw new RuntimeException("Не установлены параметры подключения к базе данных");
