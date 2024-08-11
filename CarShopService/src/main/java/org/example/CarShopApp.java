@@ -41,7 +41,7 @@ public class CarShopApp {
         AuditLogController auditLogController = new AuditLogController();
 
         // Добавление тестовых пользователей
-        addTestUsers(userController);
+//        addTestUsers(userController);
 
         // Меню и взаимодействие с пользователем
         Scanner scanner = new Scanner(System.in);
@@ -61,44 +61,47 @@ public class CarShopApp {
                         removeCar(carController, auditLogController, username, scanner);
                         break;
                     case 3:
+                        showAvailableCars(carController);
+                        break;
+                    case 4:
                         //  обновления автомобиля
                         updateCar(carController, auditLogController, username, scanner);
                         break;
-                    case 4:
+                    case 5:
                         //  создания заказа
                         createOrder(orderController, carController, userController, auditLogController, username, scanner);
                         break;
-                    case 5:
+                    case 6:
                         showAllOrders(orderController);
                         break;
-                    case 6:
+                    case 7:
                         updateOrderStatus(orderController, auditLogController, username, scanner);
                         break;
-                    case 7:
+                    case 8:
                         cancelOrder(orderController, auditLogController, username, scanner);
                         break;
-                    case 8:
+                    case 9:
                         showAllUsers(userController);
                         break;
-                    case 9:
+                    case 10:
                         filterClientsByName(userController, scanner);
                         break;
-                    case 10:
+                    case 11:
                         filterClientsByContactInfo(userController, scanner);
                         break;
-                    case 11:
+                    case 12:
                         sortClientsByName(userController);
                         break;
-                    case 12:
+                    case 13:
                         filterClientsByOrders(userController, scanner);
                         break;
-                    case 13:
+                    case 14:
                         sortClientsByOrders(userController);
                         break;
-                    case 14:
+                    case 15:
                         registerNewUser(userController, scanner);
                         break;
-                    case 15:
+                    case 16:
                         showAuditLogs(auditLogController);
                         break;
                     case 0:
@@ -113,24 +116,24 @@ public class CarShopApp {
         }
     }
 
-    private static void addTestUsers(UserController userController) {
-        try {
-            // Создание и регистрация тестовых пользователей
-            User admin = new Admin("admin", "adminpass");
-            User manager = new Manager("manager", "managerpass");
-            Client client1 = new Client("client1", "client1pass", "1233@mail.ru");
-            Client client2 = new Client("client2", "client2pass", "123@mail.ru");
-
-            userController.registerUser(admin);
-            userController.registerUser(manager);
-            userController.registerUser(client1);
-            userController.registerUser(client2);
-
-            System.out.println(SUCCESS + "Тестовые пользователи успешно добавлены." + RESET);
-        } catch (SQLException e) {
-            System.out.println(ERROR + "Ошибка при добавлении тестовых пользователей: " + e.getMessage() + RESET);
-        }
-    }
+//    private static void addTestUsers(UserController userController) {
+//        try {
+//            // Создание и регистрация тестовых пользователей
+//            User admin = new Admin("admin", "adminpass");
+//            User manager = new Manager("manager", "managerpass");
+//            Client client1 = new Client("client1", "client1pass", "1233@mail.ru");
+//            Client client2 = new Client("client2", "client2pass", "123@mail.ru");
+//
+//            userController.registerUser(admin);
+//            userController.registerUser(manager);
+//            userController.registerUser(client1);
+//            userController.registerUser(client2);
+//
+//            System.out.println(SUCCESS + "Тестовые пользователи успешно добавлены." + RESET);
+//        } catch (SQLException e) {
+//            System.out.println(ERROR + "Ошибка при добавлении тестовых пользователей: " + e.getMessage() + RESET);
+//        }
+//    }
 
     private static void showMenu() {
         System.out.println(LINE_SEPARATOR);
@@ -138,19 +141,20 @@ public class CarShopApp {
         System.out.println(SEPARATOR);
         System.out.println("1. Добавить автомобиль");
         System.out.println("2. Удалить автомобиль");
-        System.out.println("3. Обновить информацию об автомобиле");
-        System.out.println("4. Создать заказ");
-        System.out.println("5. Показать все заказы");
-        System.out.println("6. Обновить статус заказа");
-        System.out.println("7. Отменить заказ");
-        System.out.println("8. Показать всех пользователей");
-        System.out.println("9. Фильтрация клиентов по имени");
-        System.out.println("10. Фильтрация клиентов по контактной информации");
-        System.out.println("11. Сортировка клиентов по имени");
-        System.out.println("12. Фильтрация клиентов по количеству заказов");
-        System.out.println("13. Сортировка клиентов по количеству заказов");
-        System.out.println("14. Регистрация нового пользователя");
-        System.out.println("15. Показать журнал аудита");
+        System.out.println("3. Показать доступные автомобили");
+        System.out.println("4. Обновить информацию об автомобиле");
+        System.out.println("5. Создать заказ");
+        System.out.println("6. Показать все заказы");
+        System.out.println("7. Обновить статус заказа");
+        System.out.println("8. Отменить заказ");
+        System.out.println("9. Показать всех пользователей");
+        System.out.println("10. Фильтрация клиентов по имени");
+        System.out.println("11. Фильтрация клиентов по контактной информации");
+        System.out.println("12. Сортировка клиентов по имени");
+        System.out.println("13. Фильтрация клиентов по количеству заказов");
+        System.out.println("14. Сортировка клиентов по количеству заказов");
+        System.out.println("15. Регистрация нового пользователя");
+        System.out.println("16. Показать журнал аудита");
         System.out.println("0. Выход");
         System.out.println(SEPARATOR);
         System.out.print("Выберите действие: ");

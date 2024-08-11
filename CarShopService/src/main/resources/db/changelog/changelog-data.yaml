@@ -8,7 +8,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "id"
-                  value: "1"  # Установите идентификаторы явно или используйте последовательность
+                  value: "1"
               - column:
                   name: "username"
                   value: "john_doe"
@@ -27,7 +27,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "id"
-                  value: "2"  # Установите идентификаторы явно или используйте последовательность
+                  value: "2"
               - column:
                   name: "username"
                   value: "jane_smith"
@@ -50,7 +50,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "id"
-                  value: "1"  # Убедитесь, что идентификатор существует
+                  value: "1"
               - column:
                   name: "make"
                   value: "Toyota"
@@ -75,7 +75,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "id"
-                  value: "2"  # Убедитесь, что идентификатор существует
+                  value: "2"
               - column:
                   name: "make"
                   value: "Honda"
@@ -104,7 +104,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "user_id"
-                  value: "1"  # Убедитесь, что идентификатор существует
+                  value: "1"
               - column:
                   name: "admin_specific_field"
                   value: "Admin-specific info"
@@ -114,7 +114,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: "user_id"
-                  value: "2"  # Убедитесь, что идентификатор существует
+                  value: "2"
               - column:
                   name: "client_specific_field"
                   value: "Client-specific info"
@@ -128,10 +128,10 @@ databaseChangeLog:
             columns:
               - column:
                   name: "car_id"
-                  value: "1"  # Убедитесь, что этот идентификатор существует в таблице `cars`
+                  value: "1"
               - column:
                   name: "client_id"
-                  value: "2"  # Убедитесь, что этот идентификатор существует в таблице `clients`
+                  value: "2"
               - column:
                   name: "status"
                   value: "created"
