@@ -1,5 +1,11 @@
 package org.example.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Client extends User {
 
     private String contactInfo;
@@ -14,18 +20,6 @@ public class Client extends User {
     @Override
     public String getRole() {
         return "Client";
-    }
-
-    public String getContactInfo() {
-        return contactInfo;
-    }
-
-    public void setContactInfo(String contactInfo) {
-        this.contactInfo = contactInfo;
-    }
-
-    public int getOrderCount() {
-        return orderCount;
     }
 
     public void setOrderCount(int orderCount) {

@@ -1,97 +1,70 @@
 package org.example.controller;
 
+import lombok.AllArgsConstructor;
 import org.example.model.Car;
 import org.example.model.Client;
 import org.example.model.Order;
+import org.example.repository.CarRepository;
+import org.example.repository.OrderRepository;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.sql.SQLException;
 
 
-
+@AllArgsConstructor
 public class OrderController {
-    private List<Order> orders = new ArrayList<>();
-    private UserController userController;
+    private final OrderRepository orderRepository;
+    private final UserController userController;
+    private final CarRepository carRepository;
 
-    // Конструктор для инициализации UserController
-    public OrderController(UserController userController) {
-        this.userController = userController;
-    }
 
     // Создание нового заказа
-    public Order createOrder(Car car, Client client) {
-
+    public Order createOrder(Car car, Client client) throws SQLException {
         Order order = new Order(car, client);
+        orderRepository.addOrder(order);
         car.setAvailable(false);
-        orders.add(order);
+        carRepository.updateCar(car);
         userController.increaseOrderCount(client.getUsername());
         return order;
     }
 
-    // Получение всех заказов
-    public List<Order> getAllOrders() {
-        return orders;
+    // Получение всех заказов /
+    public List<Order> getAllOrders() throws SQLException {
+        return orderRepository.getAllOrders();
     }
 
     // Получение заказа по ID
-    public Order getOrderById(int id) {
-        for (Order order : orders) {
-            if (order.getId() == id) {
-                return order;
-            }
-        }
-        return null;
+    public Order getOrderById(int id) throws SQLException {
+        return orderRepository.getOrderById(id);
     }
 
     // Изменение статуса заказа
-    public boolean updateOrderStatus(int id, String status) {
-        Order order = getOrderById(id);
-        if (order != null) {
-            order.setStatus(status);
-            return true;
-        }
-        return false;
+    public boolean updateOrderStatus(int id, String status) throws SQLException {
+        return orderRepository.updateOrderStatus(id, status);
     }
 
     // Отмена заказа
-    public boolean cancelOrder(int id) {
-        Order order = getOrderById(id);
-        if (order != null) {
-            order.setStatus("cancelled");
-            order.getCar().setAvailable(true);
-            return true;
-        }
-        return false;
+    public boolean cancelOrder(int id) throws SQLException {
+        return orderRepository.cancelOrder(id);
     }
 
     // Получение заказов по диапазону дат
-    public List<Order> getOrdersByDateRange(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return orders.stream()
-                .filter(order -> order.getDate() != null &&
-                        (order.getDate().isAfter(startDateTime) || order.getDate().isEqual(startDateTime)) &&
-                        (order.getDate().isBefore(endDateTime) || order.getDate().isEqual(endDateTime)))
-                .collect(Collectors.toList());
+    public List<Order> getOrdersByDateRange(LocalDateTime startDateTime, LocalDateTime endDateTime) throws SQLException {
+        return orderRepository.getOrdersByDateRange(startDateTime, endDateTime);
     }
 
     // Получение заказов по клиенту
-    public List<Order> getOrdersByClient(String clientUsername) {
-        return orders.stream()
-                .filter(order -> order.getClient().getUsername().equalsIgnoreCase(clientUsername))
-                .collect(Collectors.toList());
+    public List<Order> getOrdersByClient(String clientUsername) throws SQLException {
+        return orderRepository.getOrdersByClient(clientUsername);
     }
 
     // Получение заказов по статусу
-    public List<Order> getOrdersByStatus(String status) {
-        return orders.stream()
-                .filter(order -> order.getStatus().equalsIgnoreCase(status))
-                .collect(Collectors.toList());
+    public List<Order> getOrdersByStatus(String status) throws SQLException {
+        return orderRepository.getOrdersByStatus(status);
     }
 
     // Получение заказов по машине
-    public List<Order> getOrdersByCar(int carId) {
-        return orders.stream()
-                .filter(order -> order.getCar().getId() == carId)
-                .collect(Collectors.toList());
+    public List<Order> getOrdersByCar(int carId) throws SQLException {
+        return orderRepository.getOrdersByCar(carId);
     }
 }

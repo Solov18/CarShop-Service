@@ -1,0 +1,135 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "user_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "users"
+            columns:
+              - column:
+                  name: "id"
+                  type: "int"
+                  defaultValueSequenceNext: "user_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "username"
+                  type: "varchar(255)"
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: "password"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "role"
+                  type: "varchar(50)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "contact_info"
+                  type: "varchar(255)"
+
+  - changeSet:
+      id: "2"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "admin_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "admins"
+            columns:
+              - column:
+                  name: "user_id"
+                  type: "int"
+                  defaultValueSequenceNext: "admin_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "admin_specific_field"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: "admins"
+            baseColumnNames: "user_id"
+            constraintName: "fk_admins_users"
+            referencedTableName: "users"
+            referencedColumnNames: "id"
+
+  - changeSet:
+      id: "3"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "client_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "clients"
+            columns:
+              - column:
+                  name: "user_id"
+                  type: "int"
+                  defaultValueSequenceNext: "client_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "client_specific_field"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: "clients"
+            baseColumnNames: "user_id"
+            constraintName: "fk_clients_users"
+            referencedTableName: "users"
+            referencedColumnNames: "id"
+
+  - changeSet:
+      id: "4"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "manager_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "managers"
+            columns:
+              - column:
+                  name: "user_id"
+                  type: "int"
+                  defaultValueSequenceNext: "manager_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "manager_specific_field"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: "managers"
+            baseColumnNames: "user_id"
+            constraintName: "fk_managers_users"
+            referencedTableName: "users"
+            referencedColumnNames: "id"

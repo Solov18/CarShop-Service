@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: "your_name"
+      changes:
+        - createSequence:
+            sequenceName: "order_id_seq"
+            startValue: 1
+            incrementBy: 1
+
+        - createTable:
+            tableName: "orders"
+            columns:
+              - column:
+                  name: "id"
+                  type: "int"
+                  defaultValueSequenceNext: "order_id_seq"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: "car_id"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "client_id"
+                  type: "int"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "status"
+                  type: "varchar(255)"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: "date"
+                  type: "timestamp"
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: "orders"
+            baseColumnNames: "car_id"
+            constraintName: "fk_orders_cars"
+            referencedTableName: "cars"
+            referencedColumnNames: "id"
+
+        - addForeignKeyConstraint:
+            baseTableName: "orders"
+            baseColumnNames: "client_id"
+            constraintName: "fk_orders_clients"
+            referencedTableName: "clients"
+            referencedColumnNames: "user_id"
