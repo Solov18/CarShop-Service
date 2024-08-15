@@ -1,4 +1,4 @@
-package org.example.controller;
+package org.example.service;
 
 import lombok.AllArgsConstructor;
 import org.example.model.Car;
@@ -8,7 +8,7 @@ import java.util.Optional;
 
 
 @AllArgsConstructor
-public class CarController {
+public class CarService {
 
     private CarRepository carRepository;
 

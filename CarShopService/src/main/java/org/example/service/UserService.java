@@ -1,4 +1,4 @@
-package org.example.controller;
+package org.example.service;
 
 import lombok.AllArgsConstructor;
 import org.example.model.Client;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
-public class UserController {
+public class UserService {
     private UserRepository userRepository;
 
     // Регистрация нового пользователя

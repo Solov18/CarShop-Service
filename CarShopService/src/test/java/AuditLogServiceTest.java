@@ -8,7 +8,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuditLogControllerTest {
+class AuditLogServiceTest {
 
     @Test
     void testLogAction() {

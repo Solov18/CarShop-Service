@@ -3,7 +3,7 @@ package org.example.logi;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuditLogController {
+public class AuditLogService {
     private List<AuditLog> logs = new ArrayList<>();
 
     public void logAction(String username, String action) {

@@ -1,4 +1,4 @@
-package org.example.controller;
+package org.example.service;
 
 import lombok.AllArgsConstructor;
 import org.example.model.Car;
@@ -12,9 +12,9 @@ import java.sql.SQLException;
 
 
 @AllArgsConstructor
-public class OrderController {
+public class OrderService {
     private final OrderRepository orderRepository;
-    private final UserController userController;
+    private final UserService userService;
     private final CarRepository carRepository;
 
 
@@ -24,7 +24,7 @@ public class OrderController {
         orderRepository.addOrder(order);
         car.setAvailable(false);
         carRepository.updateCar(car);
-        userController.increaseOrderCount(client.getUsername());
+        userService.increaseOrderCount(client.getUsername());
         return order;
     }
 

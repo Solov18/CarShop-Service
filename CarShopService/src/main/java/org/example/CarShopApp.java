@@ -1,10 +1,10 @@
 package org.example;
 import org.example.config.DatabaseConnectionManager;
-import org.example.controller.CarController;
-import org.example.controller.OrderController;
-import org.example.controller.UserController;
+import org.example.service.CarService;
+import org.example.service.OrderService;
+import org.example.service.UserService;
 import org.example.logi.AuditLog;
-import org.example.logi.AuditLogController;
+import org.example.logi.AuditLogService;
 import org.example.model.*;
 import org.example.repository.CarRepository;
 import org.example.repository.OrderRepository;
@@ -33,10 +33,10 @@ public class CarShopApp {
         UserRepository userRepository = new UserRepository(dbConnectionManager);
         OrderRepository orderRepository = new OrderRepository(carRepository, userRepository, dbConnectionManager);
 
-        CarController carController = new CarController(carRepository);
-        UserController userController = new UserController(userRepository);
-        OrderController orderController = new OrderController(orderRepository, userController, carRepository);
-        AuditLogController auditLogController = new AuditLogController();
+        CarService carService = new CarService(carRepository);
+        UserService userService = new UserService(userRepository);
+        OrderService orderService = new OrderService(orderRepository, userService, carRepository);
+        AuditLogService auditLogService = new AuditLogService();
 
         Scanner scanner = new Scanner(System.in);
         String username = "";
@@ -50,18 +50,18 @@ public class CarShopApp {
                 switch (authChoice) {
                     case 1:
                         // Authentication
-                        username = authenticateUser(userController, scanner);
+                        username = authenticateUser(userService, scanner);
                         if (username == null) {
                             System.out.println(ERROR + "Аутентификация не удалась. Попробуйте снова." + RESET);
                         } else {
                             System.out.println(SUCCESS + "Аутентификация успешна. Добро пожаловать, " + username + "!" + RESET);
-                            mainMenu(scanner, carController, userController, orderController, auditLogController, username);
+                            mainMenu(scanner, carService, userService, orderService, auditLogService, username);
                             return; // Exit the authentication loop
                         }
                         break;
                     case 2:
                         // Registration
-                        registerNewUser(userController, scanner);
+                        registerNewUser(userService, scanner);
                         break;
                     case 0:
                         System.out.println("Выход из программы.");
@@ -86,7 +86,7 @@ public class CarShopApp {
         System.out.print("Выберите действие: ");
     }
 
-    private static String authenticateUser(UserController userController, Scanner scanner) throws SQLException {
+    private static String authenticateUser(UserService userService, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Аутентификация" + RESET);
         System.out.println(SEPARATOR);
@@ -95,7 +95,7 @@ public class CarShopApp {
         System.out.print("Введите пароль: ");
         String password = scanner.nextLine();
 
-        User user = userController.authenticate(username, password);
+        User user = userService.authenticate(username, password);
         if (user != null) {
             return username;
         } else {
@@ -103,7 +103,7 @@ public class CarShopApp {
         }
     }
 
-    private static void mainMenu(Scanner scanner, CarController carController, UserController userController, OrderController orderController, AuditLogController auditLogController, String username) throws SQLException {
+    private static void mainMenu(Scanner scanner, CarService carService, UserService userService, OrderService orderService, AuditLogService auditLogService, String username) throws SQLException {
         while (true) {
             showMenu();
             int choice = scanner.nextInt();
@@ -111,52 +111,52 @@ public class CarShopApp {
             try {
                 switch (choice) {
                     case 1:
-                        addCar(carController, auditLogController, username, scanner);
+                        addCar(carService, auditLogService, username, scanner);
                         break;
                     case 2:
-                        removeCar(carController, auditLogController, username, scanner);
+                        removeCar(carService, auditLogService, username, scanner);
                         break;
                     case 3:
-                        showAvailableCars(carController);
+                        showAvailableCars(carService);
                         break;
                     case 4:
-                        updateCar(carController, auditLogController, username, scanner);
+                        updateCar(carService, auditLogService, username, scanner);
                         break;
                     case 5:
-                        createOrder(orderController, carController, userController, auditLogController, username, scanner);
+                        createOrder(orderService, carService, userService, auditLogService, username, scanner);
                         break;
                     case 6:
-                        showAllOrders(orderController);
+                        showAllOrders(orderService);
                         break;
                     case 7:
-                        updateOrderStatus(orderController, auditLogController, username, scanner);
+                        updateOrderStatus(orderService, auditLogService, username, scanner);
                         break;
                     case 8:
-                        cancelOrder(orderController, auditLogController, username, scanner);
+                        cancelOrder(orderService, auditLogService, username, scanner);
                         break;
                     case 9:
-                        showAllUsers(userController);
+                        showAllUsers(userService);
                         break;
                     case 10:
-                        filterClientsByName(userController, scanner);
+                        filterClientsByName(userService, scanner);
                         break;
                     case 11:
-                        filterClientsByContactInfo(userController, scanner);
+                        filterClientsByContactInfo(userService, scanner);
                         break;
                     case 12:
-                        sortClientsByName(userController);
+                        sortClientsByName(userService);
                         break;
                     case 13:
-                        filterClientsByOrders(userController, scanner);
+                        filterClientsByOrders(userService, scanner);
                         break;
                     case 14:
-                        sortClientsByOrders(userController);
+                        sortClientsByOrders(userService);
                         break;
                     case 15:
-                        registerNewUser(userController, scanner);
+                        registerNewUser(userService, scanner);
                         break;
                     case 16:
-                        showAuditLogs(auditLogController);
+                        showAuditLogs(auditLogService);
                         break;
                     case 0:
                         System.out.println("Выход из программы.");
@@ -169,25 +169,6 @@ public class CarShopApp {
             }
         }
     }
-
-//    private static void addTestUsers(UserController userController) {
-//        try {
-//            // Создание и регистрация тестовых пользователей
-//            User admin = new Admin("admin", "adminpass");
-//            User manager = new Manager("manager", "managerpass");
-//            Client client1 = new Client("client1", "client1pass", "1233@mail.ru");
-//            Client client2 = new Client("client2", "client2pass", "123@mail.ru");
-//
-//            userController.registerUser(admin);
-//            userController.registerUser(manager);
-//            userController.registerUser(client1);
-//            userController.registerUser(client2);
-//
-//            System.out.println(SUCCESS + "Тестовые пользователи успешно добавлены." + RESET);
-//        } catch (SQLException e) {
-//            System.out.println(ERROR + "Ошибка при добавлении тестовых пользователей: " + e.getMessage() + RESET);
-//        }
-//    }
 
     private static void showMenu() {
         System.out.println(LINE_SEPARATOR);
@@ -214,7 +195,7 @@ public class CarShopApp {
         System.out.print("Выберите действие: ");
     }
 
-    private static void addCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void addCar(CarService carService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Добавление нового автомобиля" + RESET);
         System.out.println(SEPARATOR);
@@ -229,16 +210,16 @@ public class CarShopApp {
         scanner.nextLine();
         System.out.print("Введите состояние: ");
         String condition = scanner.nextLine();
-        carController.addCar(make, model, year, price, condition);
-        auditLogController.logAction(username, "Добавил автомобиль: " + make + " " + model);
+        carService.addCar(make, model, year, price, condition);
+        auditLogService.logAction(username, "Добавил автомобиль: " + make + " " + model);
         System.out.println(SUCCESS + "Автомобиль успешно добавлен." + RESET);
     }
 
-    private static void showAvailableCars(CarController carController) {
+    private static void showAvailableCars(CarService carService) {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Список доступных автомобилей" + RESET);
         System.out.println(SEPARATOR);
-        List<Car> availableCars = carController.getAllAvailableCars();
+        List<Car> availableCars = carService.getAllAvailableCars();
         if (availableCars.isEmpty()) {
             System.out.println(ERROR + "Нет доступных автомобилей." + RESET);
         } else {
@@ -246,30 +227,30 @@ public class CarShopApp {
         }
     }
 
-    private static void removeCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void removeCar(CarService carService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Удаление автомобиля" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите ID автомобиля для удаления: ");
         int id = scanner.nextInt();
         scanner.nextLine();
-        boolean removed = carController.removeCar(id);
+        boolean removed = carService.removeCar(id);
         if (removed) {
-            auditLogController.logAction(username, "Удалил автомобиль с ID: " + id);
+            auditLogService.logAction(username, "Удалил автомобиль с ID: " + id);
             System.out.println(SUCCESS + "Автомобиль успешно удален." + RESET);
         } else {
             System.out.println(ERROR + "Не удалось удалить автомобиль." + RESET);
         }
     }
 
-    private static void updateCar(CarController carController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void updateCar(CarService carService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Обновление информации об автомобиле" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите ID автомобиля для обновления: ");
         int id = scanner.nextInt();
         scanner.nextLine();
-        Car existingCar = carController.getCarById(id);
+        Car existingCar = carService.getCarById(id);
         System.out.print("Введите новую марку (текущая: " + existingCar.getMake() + "): ");
         String newMake = scanner.nextLine();
         System.out.print("Введите новую модель (текущая: " + existingCar.getModel() + "): ");
@@ -282,44 +263,44 @@ public class CarShopApp {
         System.out.print("Введите новое состояние (текущее: " + existingCar.getCondition() + "): ");
         String newCondition = scanner.nextLine();
         Car updatedCar = new Car(newMake, newModel, newYear, newPrice, newCondition);
-        boolean updated = carController.updateCar(updatedCar);
+        boolean updated = carService.updateCar(updatedCar);
         if (updated) {
-            auditLogController.logAction(username, "Обновил автомобиль с ID: " + id);
+            auditLogService.logAction(username, "Обновил автомобиль с ID: " + id);
             System.out.println(SUCCESS + "Автомобиль успешно обновлен." + RESET);
         } else {
             System.out.println(ERROR + "Не удалось обновить автомобиль." + RESET);
         }
     }
 
-    private static void createOrder(OrderController orderController, CarController carController, UserController userController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void createOrder(OrderService orderService, CarService carService, UserService userService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Создание нового заказа" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите ID автомобиля для заказа: ");
         int carId = scanner.nextInt();
         scanner.nextLine();
-        Car car = carController.getCarById(carId);
+        Car car = carService.getCarById(carId);
         if (car == null || !car.isAvailable()) {
             System.out.println(ERROR + "Автомобиль не доступен для заказа." + RESET);
             return;
         }
         System.out.print("Введите имя клиента: ");
         String clientUsername = scanner.nextLine();
-        Client client = (Client) userController.authenticate(clientUsername, null);
+        Client client = (Client) userService.authenticate(clientUsername, null);
         if (client == null) {
             System.out.println(ERROR + "Клиент не найден." + RESET);
             return;
         }
-        Order order = orderController.createOrder(car, client);
-        auditLogController.logAction(username, "Создал заказ с ID: " + order.getId() + " для клиента: " + clientUsername);
+        Order order = orderService.createOrder(car, client);
+        auditLogService.logAction(username, "Создал заказ с ID: " + order.getId() + " для клиента: " + clientUsername);
         System.out.println(SUCCESS + "Заказ успешно создан с ID: " + order.getId() + RESET);
     }
 
-    private static void showAllOrders(OrderController orderController) throws SQLException {
+    private static void showAllOrders(OrderService orderService) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Список всех заказов" + RESET);
         System.out.println(SEPARATOR);
-        List<Order> orders = orderController.getAllOrders();
+        List<Order> orders = orderService.getAllOrders();
         if (orders.isEmpty()) {
             System.out.println(ERROR + "Нет заказов." + RESET);
         } else {
@@ -327,7 +308,7 @@ public class CarShopApp {
         }
     }
 
-    private static void updateOrderStatus(OrderController orderController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void updateOrderStatus(OrderService orderService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Обновление статуса заказа" + RESET);
         System.out.println(SEPARATOR);
@@ -336,36 +317,36 @@ public class CarShopApp {
         scanner.nextLine();
         System.out.print("Введите новый статус: ");
         String status = scanner.nextLine();
-        boolean updated = orderController.updateOrderStatus(orderId, status);
+        boolean updated = orderService.updateOrderStatus(orderId, status);
         if (updated) {
-            auditLogController.logAction(username, "Обновил статус заказа с ID: " + orderId + " на: " + status);
+            auditLogService.logAction(username, "Обновил статус заказа с ID: " + orderId + " на: " + status);
             System.out.println(SUCCESS + "Статус заказа успешно обновлен." + RESET);
         } else {
             System.out.println(ERROR + "Не удалось обновить статус заказа." + RESET);
         }
     }
 
-    private static void cancelOrder(OrderController orderController, AuditLogController auditLogController, String username, Scanner scanner) throws SQLException {
+    private static void cancelOrder(OrderService orderService, AuditLogService auditLogService, String username, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Отмена заказа" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите ID заказа для отмены: ");
         int orderId = scanner.nextInt();
         scanner.nextLine();
-        boolean cancelled = orderController.cancelOrder(orderId);
+        boolean cancelled = orderService.cancelOrder(orderId);
         if (cancelled) {
-            auditLogController.logAction(username, "Отменил заказ с ID: " + orderId);
+            auditLogService.logAction(username, "Отменил заказ с ID: " + orderId);
             System.out.println(SUCCESS + "Заказ успешно отменен." + RESET);
         } else {
             System.out.println(ERROR + "Не удалось отменить заказ." + RESET);
         }
     }
 
-    private static void showAllUsers(UserController userController) throws SQLException {
+    private static void showAllUsers(UserService userService) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Список всех пользователей" + RESET);
         System.out.println(SEPARATOR);
-        List<User> users = userController.getAllUsers();
+        List<User> users = userService.getAllUsers();
         if (users.isEmpty()) {
             System.out.println(ERROR + "Нет пользователей." + RESET);
         } else {
@@ -373,13 +354,13 @@ public class CarShopApp {
         }
     }
 
-    private static void filterClientsByName(UserController userController, Scanner scanner) throws SQLException {
+    private static void filterClientsByName(UserService userService, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Фильтрация клиентов по имени" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите имя клиента: ");
         String name = scanner.nextLine();
-        List<Client> clients = userController.filterClientsByName(name);
+        List<Client> clients = userService.filterClientsByName(name);
         if (clients.isEmpty()) {
             System.out.println(ERROR + "Нет клиентов с таким именем." + RESET);
         } else {
@@ -387,13 +368,13 @@ public class CarShopApp {
         }
     }
 
-    private static void filterClientsByContactInfo(UserController userController, Scanner scanner) throws SQLException {
+    private static void filterClientsByContactInfo(UserService userService, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Фильтрация клиентов по контактной информации" + RESET);
         System.out.println(SEPARATOR);
         System.out.print("Введите контактную информацию: ");
         String contactInfo = scanner.nextLine();
-        List<Client> clients = userController.filterClientsByContactInfo(contactInfo);
+        List<Client> clients = userService.filterClientsByContactInfo(contactInfo);
         if (clients.isEmpty()) {
             System.out.println(ERROR + "Нет клиентов с такой контактной информацией." + RESET);
         } else {
@@ -401,15 +382,15 @@ public class CarShopApp {
         }
     }
 
-    private static void sortClientsByName(UserController userController) throws SQLException {
+    private static void sortClientsByName(UserService userService) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Сортировка клиентов по имени" + RESET);
         System.out.println(SEPARATOR);
-        List<Client> clients = userController.sortClientsByName();
+        List<Client> clients = userService.sortClientsByName();
         clients.forEach(System.out::println);
     }
 
-    private static void filterClientsByOrders(UserController userController, Scanner scanner) throws SQLException {
+    private static void filterClientsByOrders(UserService userService, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Фильтрация клиентов по количеству заказов" + RESET);
         System.out.println(SEPARATOR);
@@ -418,7 +399,7 @@ public class CarShopApp {
         System.out.print("Введите максимальное количество заказов: ");
         int maxOrders = scanner.nextInt();
         scanner.nextLine();
-        List<Client> clients = userController.filterClientsByOrders(minOrders, maxOrders);
+        List<Client> clients = userService.filterClientsByOrders(minOrders, maxOrders);
         if (clients.isEmpty()) {
             System.out.println(ERROR + "Нет клиентов с таким количеством заказов." + RESET);
         } else {
@@ -426,15 +407,15 @@ public class CarShopApp {
         }
     }
 
-    private static void sortClientsByOrders(UserController userController) throws SQLException {
+    private static void sortClientsByOrders(UserService userService) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Сортировка клиентов по количеству заказов" + RESET);
         System.out.println(SEPARATOR);
-        List<Client> clients = userController.sortClientsByOrders();
+        List<Client> clients = userService.sortClientsByOrders();
         clients.forEach(System.out::println);
     }
 
-    private static void registerNewUser(UserController userController, Scanner scanner) throws SQLException {
+    private static void registerNewUser(UserService userService, Scanner scanner) throws SQLException {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Регистрация нового пользователя" + RESET);
         System.out.println(SEPARATOR);
@@ -462,11 +443,11 @@ public class CarShopApp {
                 System.out.println("Неверный тип пользователя. Используйте Admin, Manager или Client.");
                 return;
         }
-        userController.registerUser(user);
+        userService.registerUser(user);
         System.out.println(SUCCESS + "Пользователь успешно зарегистрирован." + RESET);
     }
 
-    private static void showAuditLogs(AuditLogController auditLogController) {
+    private static void showAuditLogs(AuditLogService auditLogController) {
         System.out.println(LINE_SEPARATOR);
         System.out.println(HIGHLIGHT + "Журнал аудита" + RESET);
         System.out.println(SEPARATOR);
