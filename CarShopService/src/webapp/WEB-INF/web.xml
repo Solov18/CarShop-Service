@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+    <servlet>
+        <servlet-name>HelloServlet</servlet-name>
+        <servlet-class>com.example.HelloServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HelloServlet</servlet-name>
+        <url-pattern>/hello</url-pattern>
+    </servlet-mapping>
+</web-app>
+
+
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"-->
+<!--         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"-->
+<!--         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee-->
+<!--                             http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"-->
+<!--         version="3.1">-->
+
+
+<!--    <servlet>-->
+<!--        <servlet-name>carController</servlet-name>-->
+<!--        <servlet-class>org.example.CarController</servlet-class>-->
+<!--    </servlet>-->
+<!--    <servlet>-->
+<!--        <servlet-name>clientController</servlet-name>-->
+<!--        <servlet-class>org.example.ClientController</servlet-class>-->
+<!--    </servlet>-->
+<!--    <servlet>-->
+<!--        <servlet-name>orderController</servlet-name>-->
+<!--        <servlet-class>org.example.OrderController</servlet-class>-->
+<!--    </servlet>-->
+<!--    <servlet>-->
+<!--        <servlet-name>userController</servlet-name>-->
+<!--        <servlet-class>org.example.UserController</servlet-class>-->
+<!--    </servlet>-->
+
+
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>carController</servlet-name>-->
+<!--        <url-pattern>/api/cars</url-pattern>-->
+<!--    </servlet-mapping>-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>clientController</servlet-name>-->
+<!--        <url-pattern>/api/clients</url-pattern>-->
+<!--    </servlet-mapping>-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>orderController</servlet-name>-->
+<!--        <url-pattern>/api/orders</url-pattern>-->
+<!--    </servlet-mapping>-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>userController</servlet-name>-->
+<!--        <url-pattern>/api/users</url-pattern>-->
+<!--    </servlet-mapping>-->
+
+<!--    &lt;!&ndash; Настройка приветственной страницы (опционально) &ndash;&gt;-->
+<!--    <welcome-file-list>-->
+<!--        <welcome-file>index.html</welcome-file>-->
+<!--    </welcome-file-list>-->
+<!--</web-app>-->

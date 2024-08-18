@@ -1,5 +1,7 @@
+package serviseTest;
+
 import org.example.logi.AuditLog;
-import org.example.logi.AuditLogController;
+import org.example.logi.AuditLogService;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -12,18 +14,18 @@ class AuditLogServiceTest {
 
     @Test
     void testLogAction() {
-        AuditLogController auditLogController = mock(AuditLogController.class);
+        AuditLogService auditLogService = mock(AuditLogService.class);
 
-        doNothing().when(auditLogController).logAction("user", "action");
+        doNothing().when(auditLogService).logAction("user", "action");
 
-        auditLogController.logAction("user", "action");
+        auditLogService.logAction("user", "action");
 
-        verify(auditLogController).logAction("user", "action");
+        verify(auditLogService).logAction("user", "action");
     }
 
     @Test
     void testGetAllLogs() {
-        AuditLogController auditLogController = mock(AuditLogController.class);
+        AuditLogService auditLogController = mock(AuditLogService.class);
 
         List<AuditLog> mockLogs = new ArrayList<>();
         mockLogs.add(new AuditLog("user", "action"));

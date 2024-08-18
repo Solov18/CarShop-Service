@@ -50,12 +50,6 @@ public class UserRepository {
                 String role = resultSet.getString("role");
                 String contactInfo = resultSet.getString("contact_info");
 
-
-                System.out.println("Found user: " + username);
-                System.out.println("Password: " + password);
-                System.out.println("Role: " + role);
-                System.out.println("Contact Info: " + contactInfo);
-
                 // Сопоставление роли
                 switch (role.toLowerCase()) {
                     case "admin":
@@ -88,11 +82,11 @@ public class UserRepository {
                 String username = resultSet.getString("username");
                 String password = resultSet.getString("password");
                 String role = resultSet.getString("role");
-                if (role.equals("Admin")) {
+                if (role.equalsIgnoreCase("admin")) {
                     users.add(new Admin(username, password));
-                } else if (role.equals("Client")) {
+                } else if (role.equalsIgnoreCase("client")) {
                     users.add(new Client(username, password, resultSet.getString("contact_info")));
-                } else if (role.equals("Manager")) {
+                } else if (role.equalsIgnoreCase("manager")) {
                     users.add(new Manager(username, password));
                 }
             }
@@ -116,5 +110,38 @@ public class UserRepository {
             System.err.println("Ошибка при проверке существования пользователя: " + e.getMessage());
             throw new RuntimeException("Не удалось проверить существование пользователя в базе данных", e);
         }
+    }
+
+    // Удаление пользователя
+    public void removeUser(User user) {
+        String sql = "DELETE FROM users WHERE username = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, user.getUsername());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при удалении пользователя: " + e.getMessage());
+            throw new RuntimeException("Не удалось удалить пользователя из базы данных", e);
+        }
+    }
+
+    // Фильтрация клиентов по контактной информации
+    public List<Client> getClientsByContactInfo(String contactInfo) {
+        String sql = "SELECT * FROM users WHERE role = 'Client' AND contact_info LIKE ?";
+        List<Client> clients = new ArrayList<>();
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, "%" + contactInfo + "%");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String username = resultSet.getString("username");
+                String password = resultSet.getString("password");
+                clients.add(new Client(username, password, resultSet.getString("contact_info")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка при фильтрации клиентов по контактной информации: " + e.getMessage());
+            throw new RuntimeException("Не удалось получить клиентов из базы данных", e);
+        }
+        return clients;
     }
 }

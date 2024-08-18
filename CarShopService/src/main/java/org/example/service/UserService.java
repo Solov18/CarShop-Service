@@ -1,6 +1,9 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
+import org.example.dto.ClientDTO;
+import org.example.dto.UserDTO;
+import org.example.mapper.UserMapper;
 import org.example.model.Client;
 import org.example.model.User;
 import org.example.repository.UserRepository;
@@ -13,96 +16,109 @@ import java.util.stream.Collectors;
 public class UserService {
     private UserRepository userRepository;
 
-    // Регистрация нового пользователя
-    public void registerUser(User user) throws SQLException {
+
+    public void registerUser(UserDTO userDTO) throws SQLException {
+        User user = UserMapper.INSTANCE.userDTOToUser(userDTO);
+        if (userExists(user.getUsername())) {
+            throw new RuntimeException("Пользователь с таким именем уже существует");
+        }
         userRepository.addUser(user);
     }
 
-    // Аутентификация пользователя
-    public User authenticate(String username, String password) throws SQLException {
 
+    public UserDTO authenticate(String username, String password) throws SQLException {
         User user = userRepository.getUserByUsername(username);
-
-
-        if (user != null) {
-            System.out.println("User found: " + user.getUsername());
-            System.out.println("Stored password: " + user.getPassword());
-            System.out.println("Provided password: " + password);
-        } else {
-            System.out.println("User not found: " + username);
-        }
-
-
         if (user != null && user.getPassword().equals(password)) {
-            return user;
+            // Преобразование сущности в DTO
+            return UserMapper.INSTANCE.userToUserDTO(user);
         }
         return null;
     }
 
-    // Получение всех пользователей
-    public List<User> getAllUsers() throws SQLException {
-        return userRepository.getAllUsers();
-    }
 
-    // Получение списка всех клиентов
-    public List<Client> getAllClients() throws SQLException {
+    public List<UserDTO> getAllUsers() throws SQLException {
         return userRepository.getAllUsers().stream()
-                .filter(user -> user instanceof Client)
-                .map(user -> (Client) user)
+                .map(UserMapper.INSTANCE::userToUserDTO)
                 .collect(Collectors.toList());
     }
 
-    // Проверка, есть ли пользователь с таким именем
+
+    public List<ClientDTO> getAllClients() throws SQLException {
+        return userRepository.getAllUsers().stream()
+                .filter(user -> user instanceof Client)
+                .map(user -> (Client) user)
+                .map(UserMapper.INSTANCE::clientToClientDTO)
+                .collect(Collectors.toList());
+    }
+
+
     public boolean userExists(String username) throws SQLException {
         return userRepository.userExists(username);
     }
 
-    // Фильтрация клиентов по имени
-    public List<Client> filterClientsByName(String name) throws SQLException {
+
+    public List<ClientDTO> filterClientsByName(String name) throws SQLException {
         return getAllClients().stream()
-                .filter(client -> client.getUsername().contains(name))
+                .filter(clientDTO -> clientDTO.getUsername().contains(name))
                 .collect(Collectors.toList());
     }
 
-    // Фильтрация клиентов по контактной информации
-    public List<Client> filterClientsByContactInfo(String contactInfo) throws SQLException {
+
+    public List<ClientDTO> filterClientsByContactInfo(String contactInfo) throws SQLException {
         return getAllClients().stream()
-                .filter(client -> client.getContactInfo().contains(contactInfo))
+                .filter(clientDTO -> clientDTO.getContactInfo().contains(contactInfo))
                 .collect(Collectors.toList());
     }
 
-    // Сортировка клиентов по имени
-    public List<Client> sortClientsByName() throws SQLException {
+
+    public List<ClientDTO> sortClientsByName() throws SQLException {
         return getAllClients().stream()
-                .sorted(Comparator.comparing(Client::getUsername))
+                .sorted(Comparator.comparing(ClientDTO::getUsername))
                 .collect(Collectors.toList());
     }
 
-    // Фильтрация клиентов по количеству заказов
-    public List<Client> filterClientsByOrders(int minOrders, int maxOrders) throws SQLException {
+
+    public List<ClientDTO> filterClientsByOrders(int minOrders, int maxOrders) throws SQLException {
         return getAllClients().stream()
-                .filter(client -> client.getOrderCount() >= minOrders && client.getOrderCount() <= maxOrders)
+                .filter(clientDTO -> clientDTO.getOrderCount() >= minOrders && clientDTO.getOrderCount() <= maxOrders)
                 .collect(Collectors.toList());
     }
 
-    // Сортировка клиентов по количеству заказов
-    public List<Client> sortClientsByOrders() throws SQLException {
+
+    public List<ClientDTO> sortClientsByOrders() throws SQLException {
         return getAllClients().stream()
-                .sorted(Comparator.comparingInt(Client::getOrderCount))
+                .sorted(Comparator.comparingInt(ClientDTO::getOrderCount))
                 .collect(Collectors.toList());
     }
 
-    // Увеличение количества заказов клиента
+
     public void increaseOrderCount(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user instanceof Client) {
             Client client = (Client) user;
             client.increaseOrderCount();
-            userRepository.addUser(client); // Update the client in the repository
-            System.out.println("Количество заказов для клиента " + username + " увеличено до " + client.getOrderCount());
+            userRepository.addUser(client);
         } else {
             System.out.println("Клиент с именем " + username + " не найден.");
         }
+    }
+
+
+    public void removeUser(String username) throws SQLException {
+        User user = userRepository.getUserByUsername(username);
+        if (user != null) {
+            userRepository.removeUser(user);
+        } else {
+            System.out.println("Пользователь с именем " + username + " не найден.");
+        }
+    }
+
+    public ClientDTO getClientByUsername(String username) throws SQLException {
+        User user = userRepository.getUserByUsername(username);
+        if (user instanceof Client) {
+            return UserMapper.INSTANCE.clientToClientDTO((Client) user);
+        }
+        throw new RuntimeException("Клиент с таким именем не найден");
     }
 }
 

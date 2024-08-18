@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import lombok.AllArgsConstructor;
+
 import org.example.config.DatabaseConnectionManager;
 import org.example.model.Car;
 import org.example.model.Client;

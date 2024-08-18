@@ -1,3 +1,5 @@
+package serviseTest;
+
 import org.example.config.DatabaseConnectionManager;
 import org.example.repository.CarRepository;
 import org.example.repository.OrderRepository;
@@ -32,12 +34,12 @@ public class OrderServiceTest {
 
     @BeforeEach
     public void setUp() throws SQLException {
-        // Устанавливаем параметры подключения к базе данных
+
         System.setProperty("db.url", postgresContainer.getJdbcUrl());
         System.setProperty("db.username", postgresContainer.getUsername());
         System.setProperty("db.password", postgresContainer.getPassword());
 
-        // Создаем и настраиваем репозитории
+
         orderRepository = new OrderRepository(
                 new CarRepository(new DatabaseConnectionManager(
                         System.getProperty("db.url"),
@@ -64,18 +66,18 @@ public class OrderServiceTest {
                 System.getProperty("db.password"))
         );
 
-        // Создаем контроллеры с зависимостями
+
         carService = new CarService(carRepository);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository, userService, carRepository);
 
-        // Очистка данных перед каждым тестом
+
         clearDatabase();
     }
 
     @AfterEach
     public void tearDown() {
-        // Очистка данных после каждого теста
+
         clearDatabase();
     }
 

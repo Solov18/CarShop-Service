@@ -28,7 +28,7 @@ public class UserRepositoryTest extends DatabaseTestBase {
         );
         userRepository = new UserRepository(dbConnectionManager);
 
-        // Добавление тестовых данных
+
         try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS users (" +
