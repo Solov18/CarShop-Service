@@ -9,16 +9,28 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Репозиторий для работы с пользователями в базе данных.
+ */
 @AllArgsConstructor
 public class UserRepository {
     private final DatabaseConnectionManager dbConnectionManager;
 
-    // Получение соединения с базой данных
+    /**
+     * Получение соединения с базой данных.
+     *
+     * @return Соединение с базой данных.
+     * @throws SQLException Если не удалось получить соединение.
+     */
     private Connection getConnection() throws SQLException {
         return dbConnectionManager.getConnection();
     }
 
-    // Добавление нового пользователя
+    /**
+     * Добавление нового пользователя в базу данных.
+     *
+     * @param user Пользователь для добавления.
+     */
     public void addUser(User user) {
         String sql = "INSERT INTO users (username, password, role, contact_info) VALUES (?, ?, ?, ?)";
         try (Connection connection = getConnection();
@@ -38,7 +50,13 @@ public class UserRepository {
         }
     }
 
-    // Получение пользователя по username
+    /**
+     * Получение пользователя по его username.
+     *
+     * @param username Username пользователя.
+     * @return Пользователь с указанным username, или null, если пользователь не найден.
+     * @throws RuntimeException Если возникла ошибка при получении пользователя из базы данных.
+     */
     public User getUserByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection connection = getConnection();
@@ -71,7 +89,12 @@ public class UserRepository {
         return null;
     }
 
-    // Получение всех пользователей
+    /**
+     * Получение всех пользователей из базы данных.
+     *
+     * @return Список всех пользователей.
+     * @throws RuntimeException Если возникла ошибка при получении пользователей из базы данных.
+     */
     public List<User> getAllUsers() {
         String sql = "SELECT * FROM users";
         List<User> users = new ArrayList<>();
@@ -97,7 +120,13 @@ public class UserRepository {
         return users;
     }
 
-    // Проверка существования пользователя
+    /**
+     * Проверка существования пользователя по его username.
+     *
+     * @param username Username пользователя.
+     * @return true, если пользователь существует, иначе false.
+     * @throws RuntimeException Если возникла ошибка при проверке существования пользователя.
+     */
     public boolean userExists(String username) {
         String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
         try (Connection connection = getConnection();
@@ -112,7 +141,11 @@ public class UserRepository {
         }
     }
 
-    // Удаление пользователя
+    /**
+     * Удаление пользователя из базы данных.
+     *
+     * @param user Пользователь для удаления.
+     */
     public void removeUser(User user) {
         String sql = "DELETE FROM users WHERE username = ?";
         try (Connection connection = getConnection();
@@ -125,7 +158,13 @@ public class UserRepository {
         }
     }
 
-    // Фильтрация клиентов по контактной информации
+    /**
+     * Фильтрация клиентов по контактной информации.
+     *
+     * @param contactInfo Контактная информация для фильтрации.
+     * @return Список клиентов, соответствующих указанной контактной информации.
+     * @throws RuntimeException Если возникла ошибка при фильтрации клиентов.
+     */
     public List<Client> getClientsByContactInfo(String contactInfo) {
         String sql = "SELECT * FROM users WHERE role = 'Client' AND contact_info LIKE ?";
         List<Client> clients = new ArrayList<>();

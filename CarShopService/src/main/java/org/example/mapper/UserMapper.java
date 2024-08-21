@@ -13,28 +13,30 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 
-
 @Mapper
 public interface UserMapper {
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
+    // Маппинг между User и UserDTO, поле role игнорируется
     @Mapping(target = "role", ignore = true)
     UserDTO userToUserDTO(User user);
 
     @Mapping(target = "role", ignore = true)
     User userDTOToUser(UserDTO userDTO);
 
+    // Маппинг между Client и ClientDTO, поле orderCount игнорируется
     @Mapping(target = "orderCount", ignore = true)
     ClientDTO clientToClientDTO(Client client);
 
     @Mapping(target = "orderCount", ignore = true)
     Client clientDTOToClient(ClientDTO clientDTO);
 
-
+    // Маппинг между Manager и ManagerDTO
     ManagerDTO managerToManagerDTO(Manager manager);
 
     Manager managerDTOToManager(ManagerDTO managerDTO);
 
+    // Маппинг между Admin и AdminDTO
     AdminDTO adminToAdminDTO(Admin admin);
 
     Admin adminDTOToAdmin(AdminDTO adminDTO);

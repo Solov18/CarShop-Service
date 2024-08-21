@@ -12,25 +12,42 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-//@AllArgsConstructor
+/**
+ * Репозиторий для работы с заказами в базе данных.
+ */
 public class OrderRepository {
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final DatabaseConnectionManager dbConnectionManager;
 
-    // Конструктор, принимающий зависимости
+    /**
+     * Конструктор, принимающий зависимости.
+     *
+     * @param carRepository Репозиторий для работы с автомобилями.
+     * @param userRepository Репозиторий для работы с пользователями.
+     * @param dbConnectionManager Менеджер соединений с базой данных.
+     */
     public OrderRepository(CarRepository carRepository, UserRepository userRepository, DatabaseConnectionManager dbConnectionManager) {
         this.carRepository = carRepository;
         this.userRepository = userRepository;
         this.dbConnectionManager = dbConnectionManager;
     }
 
-    // Получение соединения с базой данных
+    /**
+     * Получение соединения с базой данных.
+     *
+     * @return Соединение с базой данных.
+     * @throws SQLException Если не удалось получить соединение.
+     */
     private Connection getConnection() throws SQLException {
         return dbConnectionManager.getConnection();
     }
 
-    // Добавление нового заказа
+    /**
+     * Добавление нового заказа в базу данных.
+     *
+     * @param order Заказ для добавления.
+     */
     public void addOrder(Order order) {
         String sql = "INSERT INTO orders (car_id, client_username, status, date) VALUES (?, ?, ?, ?)";
         try (Connection connection = getConnection();
@@ -52,7 +69,13 @@ public class OrderRepository {
         }
     }
 
-    // Получение заказа по ID
+    /**
+     * Получение заказа по его идентификатору.
+     *
+     * @param id Идентификатор заказа.
+     * @return Заказ с указанным идентификатором.
+     * @throws RuntimeException Если заказ с указанным идентификатором не найден или возникла ошибка.
+     */
     public Order getOrderById(int id) {
         String sql = "SELECT * FROM orders WHERE id = ?";
         try (Connection connection = getConnection();
@@ -83,7 +106,12 @@ public class OrderRepository {
         return null;
     }
 
-    // Получение всех заказов
+    /**
+     * Получение всех заказов из базы данных.
+     *
+     * @return Список всех заказов.
+     * @throws RuntimeException Если возникла ошибка при получении заказов.
+     */
     public List<Order> getAllOrders() {
         String sql = "SELECT * FROM orders";
         List<Order> orders = new ArrayList<>();
@@ -113,7 +141,13 @@ public class OrderRepository {
         return orders;
     }
 
-    // Получение заказов по клиенту
+    /**
+     * Получение заказов по username клиента.
+     *
+     * @param clientUsername Username клиента.
+     * @return Список заказов клиента.
+     * @throws RuntimeException Если возникла ошибка при получении заказов.
+     */
     public List<Order> getOrdersByClient(String clientUsername) {
         String sql = "SELECT * FROM orders WHERE client_username = ?";
         List<Order> orders = new ArrayList<>();
@@ -143,7 +177,13 @@ public class OrderRepository {
         return orders;
     }
 
-    // Обновление статуса заказа
+    /**
+     * Обновление статуса заказа.
+     *
+     * @param id Идентификатор заказа.
+     * @param status Новый статус заказа.
+     * @return true, если статус был обновлен успешно, иначе false.
+     */
     public boolean updateOrderStatus(int id, String status) {
         String sql = "UPDATE orders SET status = ? WHERE id = ?";
         try (Connection connection = getConnection();
@@ -157,12 +197,24 @@ public class OrderRepository {
         }
     }
 
-    // Отмена заказа (установка статуса 'cancelled')
+    /**
+     * Отмена заказа (установка статуса 'cancelled').
+     *
+     * @param id Идентификатор заказа.
+     * @return true, если заказ был отменен успешно, иначе false.
+     */
     public boolean cancelOrder(int id) {
         return updateOrderStatus(id, "cancelled");
     }
 
-    // Получение заказов по диапазону дат
+    /**
+     * Получение заказов по диапазону дат.
+     *
+     * @param startDateTime Начальная дата и время.
+     * @param endDateTime Конечная дата и время.
+     * @return Список заказов, сделанных в указанный диапазон дат.
+     * @throws RuntimeException Если возникла ошибка при получении заказов.
+     */
     public List<Order> getOrdersByDateRange(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         String sql = "SELECT * FROM orders WHERE date BETWEEN ? AND ?";
         List<Order> orders = new ArrayList<>();
@@ -194,7 +246,13 @@ public class OrderRepository {
         return orders;
     }
 
-    // Получение заказов по статусу
+    /**
+     * Получение заказов по статусу.
+     *
+     * @param status Статус заказа.
+     * @return Список заказов с указанным статусом.
+     * @throws RuntimeException Если возникла ошибка при получении заказов.
+     */
     public List<Order> getOrdersByStatus(String status) {
         String sql = "SELECT * FROM orders WHERE status = ?";
         List<Order> orders = new ArrayList<>();
@@ -225,7 +283,13 @@ public class OrderRepository {
         return orders;
     }
 
-    // Получение заказов по машине
+    /**
+     * Получение заказов по идентификатору автомобиля.
+     *
+     * @param carId Идентификатор автомобиля.
+     * @return Список заказов для указанного автомобиля.
+     * @throws RuntimeException Если возникла ошибка при получении заказов.
+     */
     public List<Order> getOrdersByCar(int carId) {
         String sql = "SELECT * FROM orders WHERE car_id = ?";
         List<Order> orders = new ArrayList<>();

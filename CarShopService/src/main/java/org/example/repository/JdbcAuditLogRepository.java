@@ -6,12 +6,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Реализация репозитория для работы с журналом аудита с использованием JDBC.
+ */
 public class JdbcAuditLogRepository implements AuditLogRepository {
 
     private final String jdbcUrl = "jdbc:postgresql://localhost:5433/mydatabase";
     private final String jdbcUser = "user";
     private final String jdbcPassword = "password";
 
+    /**
+     * Сохраняет запись журнала аудита в базе данных.
+     *
+     * @param auditLog Запись журнала аудита для сохранения.
+     */
     @Override
     public void save(AuditLog auditLog) {
         String sql = "INSERT INTO audit_log (timestamp, action_type, username, details) VALUES (?, ?, ?, ?)";
@@ -30,6 +38,11 @@ public class JdbcAuditLogRepository implements AuditLogRepository {
         }
     }
 
+    /**
+     * Получает все записи журнала аудита из базы данных, отсортированные по времени в порядке убывания.
+     *
+     * @return Список записей журнала аудита.
+     */
     public List<AuditLog> getAllLogs() {
         List<AuditLog> logs = new ArrayList<>();
         String query = "SELECT * FROM audit_log ORDER BY timestamp DESC";

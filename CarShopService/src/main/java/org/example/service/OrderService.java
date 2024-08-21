@@ -17,6 +17,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 
+/**
+ * Сервисный класс для управления заказами. Предоставляет методы для создания, получения,
+ * обновления и отмены заказов, а также для поиска заказов по различным критериям.
+ */
 @AllArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
@@ -24,6 +28,14 @@ public class OrderService {
     private final CarRepository carRepository;
 
 
+    /**
+     * Создание нового заказа.
+     *
+     * @param orderDTO объект DTO заказа, который нужно создать.
+     * @return объект DTO созданного заказа.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     * @throws RuntimeException если машина с указанным ID не найдена.
+     */
     public OrderDTO createOrder(OrderDTO orderDTO) throws SQLException {
         Optional<Car> optionalCar = carRepository.getCarById(orderDTO.getCarId());
         if (optionalCar.isEmpty()) {
@@ -48,6 +60,12 @@ public class OrderService {
     }
 
 
+    /**
+     * Получение всех заказов.
+     *
+     * @return список DTO всех заказов.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public List<OrderDTO> getAllOrders() throws SQLException {
         List<Order> orders = orderRepository.getAllOrders();
         return orders.stream()
@@ -56,22 +74,52 @@ public class OrderService {
     }
 
 
+    /**
+     * Получение заказа по его идентификатору.
+     *
+     * @param id идентификатор заказа.
+     * @return объект DTO заказа.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public OrderDTO getOrderById(int id) throws SQLException {
         Order order = orderRepository.getOrderById(id);
         return OrderMapper.INSTANCE.orderToOrderDTO(order);
     }
 
 
+    /**
+     * Обновление статуса заказа.
+     *
+     * @param id идентификатор заказа.
+     * @param status новый статус заказа.
+     * @return true, если статус успешно обновлен, иначе false.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public boolean updateOrderStatus(int id, String status) throws SQLException {
         return orderRepository.updateOrderStatus(id, status);
     }
 
 
+    /**
+     * Отмена заказа по его идентификатору.
+     *
+     * @param id идентификатор заказа.
+     * @return true, если заказ успешно отменен, иначе false.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public boolean cancelOrder(int id) throws SQLException {
         return orderRepository.cancelOrder(id);
     }
 
 
+    /**
+     * Получение заказов по диапазону дат.
+     *
+     * @param startDateTime начальная дата и время.
+     * @param endDateTime конечная дата и время.
+     * @return список DTO заказов, находящихся в указанном диапазоне дат.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public List<OrderDTO> getOrdersByDateRange(LocalDateTime startDateTime, LocalDateTime endDateTime) throws SQLException {
         List<Order> orders = orderRepository.getOrdersByDateRange(startDateTime, endDateTime);
         return orders.stream()
@@ -80,6 +128,13 @@ public class OrderService {
     }
 
 
+    /**
+     * Получение заказов клиента по его имени пользователя.
+     *
+     * @param clientUsername имя пользователя клиента.
+     * @return список DTO заказов клиента.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public List<OrderDTO> getOrdersByClient(String clientUsername) throws SQLException {
         List<Order> orders = orderRepository.getOrdersByClient(clientUsername);
         return orders.stream()
@@ -88,6 +143,13 @@ public class OrderService {
     }
 
 
+    /**
+     * Получение заказов по их статусу.
+     *
+     * @param status статус заказа.
+     * @return список DTO заказов с указанным статусом.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public List<OrderDTO> getOrdersByStatus(String status) throws SQLException {
         List<Order> orders = orderRepository.getOrdersByStatus(status);
         return orders.stream()
@@ -96,6 +158,13 @@ public class OrderService {
     }
 
 
+    /**
+     * Получение заказов по идентификатору автомобиля.
+     *
+     * @param carId идентификатор автомобиля.
+     * @return список DTO заказов для указанного автомобиля.
+     * @throws SQLException если произошла ошибка при работе с базой данных.
+     */
     public List<OrderDTO> getOrdersByCar(int carId) throws SQLException {
         List<Order> orders = orderRepository.getOrdersByCar(carId);
         return orders.stream()
