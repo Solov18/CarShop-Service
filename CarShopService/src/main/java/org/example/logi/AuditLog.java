@@ -1,35 +1,16 @@
 package org.example.logi;
-
-import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
-public class AuditLog implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+@Setter
+@Getter
+public class AuditLog {
+    private Long id;
     private LocalDateTime timestamp;
+    private String actionType;
     private String username;
-    private String action;
+    private String details;
 
-    public AuditLog(String username, String action) {
-        this.timestamp = LocalDateTime.now();
-        this.username = username;
-        this.action = action;
-    }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    @Override
-    public String toString() {
-        return "AuditLog{" +
-                "timestamp=" + timestamp +
-                ", username='" + username + '\'' +
-                ", action='" + action + '\'' +
-                '}';
-    }
 }

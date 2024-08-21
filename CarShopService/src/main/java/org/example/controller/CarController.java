@@ -12,14 +12,28 @@ import org.example.repository.CarRepository;
 import org.example.service.CarService;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 
-
+/**
+ * Сервлет для управления автомобильными данными через REST API.
+ * Обрабатывает запросы для получения, добавления, обновления и удаления автомобилей.
+ */
+/**
+ * Класс CarController является сервлетом, который обрабатывает HTTP-запросы, связанные с автомобилями.
+ * Он предоставляет действия для получения всех доступных автомобилей, поиска по параметрам, добавления, обновления и удаления автомобилей.
+ */
 @WebServlet("/api/cars")
 public class CarController extends HttpServlet {
     private CarService carService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Инициализация сервлета и зависимостей.
+     * Вызывается при запуске сервлета.
+     *
+     * @throws ServletException если произошла ошибка во время инициализации.
+     */
     @Override
     public void init() throws ServletException {
         super.init();
@@ -29,10 +43,21 @@ public class CarController extends HttpServlet {
         this.carService = new CarService(carRepository);
     }
 
+    /**
+     * Обрабатывает GET-запросы для получения информации об автомобилях.
+     * Может возвращать автомобиль по ID, список всех доступных автомобилей или выполнять поиск по параметрам.
+     *
+     * @param req  объект запроса.
+     * @param resp объект ответа.
+     * @throws ServletException если произошла ошибка в процессе обработки.
+     * @throws IOException      если произошла ошибка при работе с I/O.
+     */
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idParam = req.getParameter("id");
-        if (idParam != null) {
+
+        // Используем Objects.isNull для улучшенной читабельности
+        if (Objects.nonNull(idParam)) {
 
             int id = Integer.parseInt(idParam);
             try {
@@ -42,8 +67,9 @@ public class CarController extends HttpServlet {
             } catch (RuntimeException e) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
-        } else if (req.getParameter("make") != null || req.getParameter("model") != null || req.getParameter("year") != null ||
-                req.getParameter("minPrice") != null || req.getParameter("maxPrice") != null || req.getParameter("condition") != null) {
+        } else if (Objects.nonNull(req.getParameter("make")) || Objects.nonNull(req.getParameter("model")) ||
+                Objects.nonNull(req.getParameter("year")) || Objects.nonNull(req.getParameter("minPrice")) ||
+                Objects.nonNull(req.getParameter("maxPrice")) || Objects.nonNull(req.getParameter("condition"))) {
 
             String make = req.getParameter("make");
             String model = req.getParameter("model");
@@ -63,6 +89,14 @@ public class CarController extends HttpServlet {
         }
     }
 
+    /**
+     * Обрабатывает POST-запросы для добавления нового автомобиля.
+     *
+     * @param req  объект запроса.
+     * @param resp объект ответа.
+     * @throws ServletException если произошла ошибка в процессе обработки.
+     * @throws IOException      если произошла ошибка при работе с I/O.
+     */
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         CarDTO carDTO = objectMapper.readValue(req.getReader(), CarDTO.class);
@@ -70,6 +104,14 @@ public class CarController extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_CREATED);
     }
 
+    /**
+     * Обрабатывает PUT-запросы для обновления данных об автомобиле.
+     *
+     * @param req  объект запроса.
+     * @param resp объект ответа.
+     * @throws ServletException если произошла ошибка в процессе обработки.
+     * @throws IOException      если произошла ошибка при работе с I/O.
+     */
     @Override
     public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         CarDTO carDTO = objectMapper.readValue(req.getReader(), CarDTO.class);
@@ -81,10 +123,18 @@ public class CarController extends HttpServlet {
         }
     }
 
+    /**
+     * Обрабатывает DELETE-запросы для удаления автомобиля по его ID.
+     *
+     * @param req  объект запроса.
+     * @param resp объект ответа.
+     * @throws ServletException если произошла ошибка в процессе обработки.
+     * @throws IOException      если произошла ошибка при работе с I/O.
+     */
     @Override
     public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idParam = req.getParameter("id");
-        if (idParam != null) {
+        if (Objects.nonNull(idParam)) {
             int id = Integer.parseInt(idParam);
             boolean removed = carService.removeCar(id);
             if (removed) {
@@ -97,13 +147,27 @@ public class CarController extends HttpServlet {
         }
     }
 
+    /**
+     * Получает целочисленный параметр из запроса.
+     *
+     * @param req       объект запроса.
+     * @param paramName имя параметра.
+     * @return значение параметра или null, если параметр отсутствует.
+     */
     public Integer getIntParameter(HttpServletRequest req, String paramName) {
         String param = req.getParameter(paramName);
-        return (param != null && !param.isEmpty()) ? Integer.parseInt(param) : null;
+        return (Objects.nonNull(param) && !param.isEmpty()) ? Integer.parseInt(param) : null;
     }
 
+    /**
+     * Получает числовой параметр с плавающей точкой из запроса.
+     *
+     * @param req       объект запроса.
+     * @param paramName имя параметра.
+     * @return значение параметра или null, если параметр отсутствует.
+     */
     public Double getDoubleParameter(HttpServletRequest req, String paramName) {
         String param = req.getParameter(paramName);
-        return (param != null && !param.isEmpty()) ? Double.parseDouble(param) : null;
+        return (Objects.nonNull(param) && !param.isEmpty()) ? Double.parseDouble(param) : null;
     }
 }
