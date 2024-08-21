@@ -4,31 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../src/main/java/org/example/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/uiDesigner.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/aspect/LoggingAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/aspect/LoggingAspect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/DatabaseConnectionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/config/DatabaseConnectionManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/dto/UserDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/mapper/UserMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/CarRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/CarRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/JdbcAuditLogRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/JdbcAuditLogRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/OrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/OrderRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/CarService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/CarService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/UserService.java" afterDir="false" />
-    </list>
+    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,6 +31,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/Admin/Desktop/3 lp/CarShop-Service-Ylab/CarShopService",
     "settings.editor.selected.configurable": "com.poratu.idea.plugins.tomcat.setting.TomcatServersConfigurable"
   }
