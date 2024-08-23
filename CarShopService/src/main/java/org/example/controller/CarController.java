@@ -1,173 +1,90 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.example.config.DatabaseConnectionManager;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.example.dto.CarDTO;
-import org.example.repository.CarRepository;
 import org.example.service.CarService;
-import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Objects;
 
+@RestController
+@RequestMapping("/api/cars")
+@Api(value = "Car API", tags = {"Автомобили"})
+public class CarController {
 
-/**
- * Сервлет для управления автомобильными данными через REST API.
- * Обрабатывает запросы для получения, добавления, обновления и удаления автомобилей.
- */
-/**
- * Класс CarController является сервлетом, который обрабатывает HTTP-запросы, связанные с автомобилями.
- * Он предоставляет действия для получения всех доступных автомобилей, поиска по параметрам, добавления, обновления и удаления автомобилей.
- */
-@WebServlet("/api/cars")
-public class CarController extends HttpServlet {
-    private CarService carService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CarService carService;
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Инициализация сервлета и зависимостей.
-     * Вызывается при запуске сервлета.
-     *
-     * @throws ServletException если произошла ошибка во время инициализации.
-     */
-    @Override
-    public void init() throws ServletException {
-        super.init();
-
-        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-        CarRepository carRepository = new CarRepository(dbConnectionManager);
-        this.carService = new CarService(carRepository);
+    @Autowired
+    public CarController(CarService carService, ObjectMapper objectMapper) {
+        this.carService = carService;
+        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Обрабатывает GET-запросы для получения информации об автомобилях.
-     * Может возвращать автомобиль по ID, список всех доступных автомобилей или выполнять поиск по параметрам.
-     *
-     * @param req  объект запроса.
-     * @param resp объект ответа.
-     * @throws ServletException если произошла ошибка в процессе обработки.
-     * @throws IOException      если произошла ошибка при работе с I/O.
-     */
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String idParam = req.getParameter("id");
+    @ApiOperation(value = "Получить список автомобилей", notes = "Получение списка всех доступных автомобилей или поиск по параметрам")
+    @GetMapping
+    public ResponseEntity<?> getCars(
+            @RequestParam(value = "id", required = false) Integer id,
+            @RequestParam(value = "make", required = false) String make,
+            @RequestParam(value = "model", required = false) String model,
+            @RequestParam(value = "year", required = false) Integer year,
+            @RequestParam(value = "minPrice", required = false) Double minPrice,
+            @RequestParam(value = "maxPrice", required = false) Double maxPrice,
+            @RequestParam(value = "condition", required = false) String condition) {
 
-        // Используем Objects.isNull для улучшенной читабельности
-        if (Objects.nonNull(idParam)) {
-
-            int id = Integer.parseInt(idParam);
-            try {
+        try {
+            if (Objects.nonNull(id)) {
                 CarDTO carDTO = carService.getCarById(id);
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), carDTO);
-            } catch (RuntimeException e) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+                return ResponseEntity.ok(carDTO);
+            } else if (Objects.nonNull(make) || Objects.nonNull(model) || Objects.nonNull(year) ||
+                    Objects.nonNull(minPrice) || Objects.nonNull(maxPrice) || Objects.nonNull(condition)) {
+                List<CarDTO> carsDTO = carService.searchCars(make, model, year, minPrice, maxPrice, condition);
+                return ResponseEntity.ok(carsDTO);
+            } else {
+                List<CarDTO> carsDTO = carService.getAllAvailableCars();
+                return ResponseEntity.ok(carsDTO);
             }
-        } else if (Objects.nonNull(req.getParameter("make")) || Objects.nonNull(req.getParameter("model")) ||
-                Objects.nonNull(req.getParameter("year")) || Objects.nonNull(req.getParameter("minPrice")) ||
-                Objects.nonNull(req.getParameter("maxPrice")) || Objects.nonNull(req.getParameter("condition"))) {
-
-            String make = req.getParameter("make");
-            String model = req.getParameter("model");
-            Integer year = getIntParameter(req, "year");
-            Double minPrice = getDoubleParameter(req, "minPrice");
-            Double maxPrice = getDoubleParameter(req, "maxPrice");
-            String condition = req.getParameter("condition");
-
-            List<CarDTO> carsDTO = carService.searchCars(make, model, year, minPrice, maxPrice, condition);
-            resp.setContentType("application/json");
-            objectMapper.writeValue(resp.getWriter(), carsDTO);
-        } else {
-
-            List<CarDTO> carsDTO = carService.getAllAvailableCars();
-            resp.setContentType("application/json");
-            objectMapper.writeValue(resp.getWriter(), carsDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    /**
-     * Обрабатывает POST-запросы для добавления нового автомобиля.
-     *
-     * @param req  объект запроса.
-     * @param resp объект ответа.
-     * @throws ServletException если произошла ошибка в процессе обработки.
-     * @throws IOException      если произошла ошибка при работе с I/O.
-     */
-    @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        CarDTO carDTO = objectMapper.readValue(req.getReader(), CarDTO.class);
+    @ApiOperation(value = "Добавить новый автомобиль", notes = "Добавление новой записи об автомобиле")
+    @PostMapping
+    public ResponseEntity<Void> addCar(@RequestBody CarDTO carDTO) {
         carService.addCar(carDTO);
-        resp.setStatus(HttpServletResponse.SC_CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    /**
-     * Обрабатывает PUT-запросы для обновления данных об автомобиле.
-     *
-     * @param req  объект запроса.
-     * @param resp объект ответа.
-     * @throws ServletException если произошла ошибка в процессе обработки.
-     * @throws IOException      если произошла ошибка при работе с I/O.
-     */
-    @Override
-    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        CarDTO carDTO = objectMapper.readValue(req.getReader(), CarDTO.class);
+    @ApiOperation(value = "Обновить информацию об автомобиле", notes = "Обновление существующей записи об автомобиле")
+    @PutMapping
+    public ResponseEntity<String> updateCar(@RequestBody CarDTO carDTO) {
         boolean updated = carService.updateCar(carDTO);
         if (updated) {
-            resp.setStatus(HttpServletResponse.SC_OK);
+            return ResponseEntity.ok().build();
         } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Автомобиль не найден для обновления");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Автомобиль не найден для обновления");
         }
     }
 
-    /**
-     * Обрабатывает DELETE-запросы для удаления автомобиля по его ID.
-     *
-     * @param req  объект запроса.
-     * @param resp объект ответа.
-     * @throws ServletException если произошла ошибка в процессе обработки.
-     * @throws IOException      если произошла ошибка при работе с I/O.
-     */
-    @Override
-    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String idParam = req.getParameter("id");
-        if (Objects.nonNull(idParam)) {
-            int id = Integer.parseInt(idParam);
+    @ApiOperation(value = "Удалить автомобиль", notes = "Удаление записи об автомобиле по ID")
+    @DeleteMapping
+    public ResponseEntity<String> deleteCar(@RequestParam("id") Integer id) {
+        if (Objects.nonNull(id)) {
             boolean removed = carService.removeCar(id);
             if (removed) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                return ResponseEntity.noContent().build();
             } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Автомобиль не найден для удаления");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Автомобиль не найден для удаления");
             }
         } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID автомобиля не указан");
+            return ResponseEntity.badRequest().body("ID автомобиля не указан");
         }
-    }
-
-    /**
-     * Получает целочисленный параметр из запроса.
-     *
-     * @param req       объект запроса.
-     * @param paramName имя параметра.
-     * @return значение параметра или null, если параметр отсутствует.
-     */
-    public Integer getIntParameter(HttpServletRequest req, String paramName) {
-        String param = req.getParameter(paramName);
-        return (Objects.nonNull(param) && !param.isEmpty()) ? Integer.parseInt(param) : null;
-    }
-
-    /**
-     * Получает числовой параметр с плавающей точкой из запроса.
-     *
-     * @param req       объект запроса.
-     * @param paramName имя параметра.
-     * @return значение параметра или null, если параметр отсутствует.
-     */
-    public Double getDoubleParameter(HttpServletRequest req, String paramName) {
-        String param = req.getParameter(paramName);
-        return (Objects.nonNull(param) && !param.isEmpty()) ? Double.parseDouble(param) : null;
     }
 }

@@ -1,6 +1,7 @@
 package org.example.repository;
 
 import org.example.logi.AuditLog;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,9 +12,12 @@ import java.util.List;
  */
 public class JdbcAuditLogRepository implements AuditLogRepository {
 
-    private final String jdbcUrl = "jdbc:postgresql://localhost:5433/mydatabase";
-    private final String jdbcUser = "user";
-    private final String jdbcPassword = "password";
+    private static final String JDBC_URL = "jdbc:postgresql://localhost:5433/mydatabase";
+    private static final String JDBC_USER = "user";
+    private static final String JDBC_PASSWORD = "password";
+
+    private static final String INSERT_AUDIT_LOG_SQL = "INSERT INTO audit_log (timestamp, action_type, username, details) VALUES (?, ?, ?, ?)";
+    private static final String SELECT_ALL_AUDIT_LOGS_SQL = "SELECT * FROM audit_log ORDER BY timestamp DESC";
 
     /**
      * Сохраняет запись журнала аудита в базе данных.
@@ -22,10 +26,8 @@ public class JdbcAuditLogRepository implements AuditLogRepository {
      */
     @Override
     public void save(AuditLog auditLog) {
-        String sql = "INSERT INTO audit_log (timestamp, action_type, username, details) VALUES (?, ?, ?, ?)";
-
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(INSERT_AUDIT_LOG_SQL)) {
 
             statement.setObject(1, auditLog.getTimestamp());
             statement.setString(2, auditLog.getActionType());
@@ -45,9 +47,8 @@ public class JdbcAuditLogRepository implements AuditLogRepository {
      */
     public List<AuditLog> getAllLogs() {
         List<AuditLog> logs = new ArrayList<>();
-        String query = "SELECT * FROM audit_log ORDER BY timestamp DESC";
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
-             PreparedStatement statement = connection.prepareStatement(query);
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(SELECT_ALL_AUDIT_LOGS_SQL);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 AuditLog log = new AuditLog();

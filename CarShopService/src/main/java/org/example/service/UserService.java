@@ -1,15 +1,18 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
 import org.example.mapper.UserMapper;
 import org.example.model.Client;
 import org.example.model.User;
 import org.example.repository.UserRepository;
+
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -17,9 +20,9 @@ import java.util.stream.Collectors;
  * аутентификации, фильтрации и сортировки пользователей и клиентов.
  */
 @AllArgsConstructor
+@Slf4j
 public class UserService {
-    private UserRepository userRepository;
-
+    private final UserRepository userRepository;
 
     /**
      * Регистрация нового пользователя.
@@ -36,7 +39,6 @@ public class UserService {
         userRepository.addUser(user);
     }
 
-
     /**
      * Аутентификация пользователя по имени пользователя и паролю.
      *
@@ -48,12 +50,10 @@ public class UserService {
     public UserDTO authenticate(String username, String password) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
-            // Преобразование сущности в DTO
             return UserMapper.INSTANCE.userToUserDTO(user);
         }
         return null;
     }
-
 
     /**
      * Получение всех пользователей.
@@ -67,7 +67,6 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Получение всех клиентов.
      *
@@ -76,12 +75,11 @@ public class UserService {
      */
     public List<ClientDTO> getAllClients() throws SQLException {
         return userRepository.getAllUsers().stream()
-                .filter(user -> user instanceof Client)
-                .map(user -> (Client) user)
+                .filter(Client.class::isInstance)
+                .map(Client.class::cast)
                 .map(UserMapper.INSTANCE::clientToClientDTO)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Проверяет, существует ли пользователь с заданным именем.
@@ -93,7 +91,6 @@ public class UserService {
     public boolean userExists(String username) throws SQLException {
         return userRepository.userExists(username);
     }
-
 
     /**
      * Фильтрует список клиентов по имени. Возвращает список клиентов, чье имя содержит заданную подстроку.
@@ -108,7 +105,6 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Фильтрует список клиентов по контактной информации. Возвращает список клиентов, чья контактная информация содержит заданную подстроку.
      *
@@ -122,7 +118,6 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Сортирует список клиентов по имени в алфавитном порядке.
      *
@@ -134,7 +129,6 @@ public class UserService {
                 .sorted(Comparator.comparing(ClientDTO::getUsername))
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Фильтрует список клиентов по количеству заказов. Возвращает список клиентов, количество заказов которых находится в заданном диапазоне.
@@ -150,8 +144,6 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
-
     /**
      * Сортирует список клиентов по количеству заказов в порядке возрастания.
      *
@@ -164,7 +156,6 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Увеличивает количество заказов для клиента с заданным именем.
      *
@@ -172,16 +163,15 @@ public class UserService {
      * @throws SQLException Если возникает ошибка при работе с базой данных.
      */
     public void increaseOrderCount(String username) throws SQLException {
-        User user = userRepository.getUserByUsername(username);
-        if (user instanceof Client) {
-            Client client = (Client) user;
+        Optional<User> optionalUser = Optional.ofNullable(userRepository.getUserByUsername(username));
+        if (optionalUser.isPresent() && optionalUser.get() instanceof Client) {
+            Client client = (Client) optionalUser.get();
             client.increaseOrderCount();
             userRepository.addUser(client);
         } else {
-            System.out.println("Клиент с именем " + username + " не найден.");
+            log.warn("Клиент с именем {} не найден.", username);
         }
     }
-
 
     /**
      * Удаляет пользователя с заданным именем.
@@ -190,11 +180,11 @@ public class UserService {
      * @throws SQLException Если возникает ошибка при работе с базой данных.
      */
     public void removeUser(String username) throws SQLException {
-        User user = userRepository.getUserByUsername(username);
-        if (user != null) {
-            userRepository.removeUser(user);
+        Optional<User> optionalUser = Optional.ofNullable(userRepository.getUserByUsername(username));
+        if (optionalUser.isPresent()) {
+            userRepository.removeUser(optionalUser.get());
         } else {
-            System.out.println("Пользователь с именем " + username + " не найден.");
+            log.warn("Пользователь с именем {} не найден.", username);
         }
     }
 
@@ -214,4 +204,3 @@ public class UserService {
         throw new RuntimeException("Клиент с таким именем не найден");
     }
 }
-

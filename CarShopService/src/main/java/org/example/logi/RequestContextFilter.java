@@ -1,16 +1,15 @@
 package org.example.logi;
 
-
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 /**
  * Фильтр для установки {@link HttpServletRequest} в {@link RequestContext}.
- * Этот фильтр устанавливает текущий запрос до выполнения фильтров и сервлетов
- * и очищает его после завершения обработки.
  */
+@Component
 public class RequestContextFilter implements Filter {
 
     @Override
@@ -25,7 +24,7 @@ public class RequestContextFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    public void init(FilterConfig filterConfig) {}
 
     @Override
     public void destroy() {}

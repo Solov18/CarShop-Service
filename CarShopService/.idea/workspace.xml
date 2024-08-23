@@ -4,11 +4,43 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="" />
+    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/EmbeddedTomcat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/EmbeddedTomcat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/aspect/LoggingAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/LoggingAspect.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/DatabaseConnectionManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CarController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CarController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/ClientController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/ClientController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/OrderController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/RequestContext.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/RequestContextFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/mapper/UserMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/CarRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/CarRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/JdbcAuditLogRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/JdbcAuditLogRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/OrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/OrderRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/CarService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/CarService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/aop.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/serviseTest/CarServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/serviseTest/CarServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/serviseTest/OrderServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/serviseTest/OrderServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/testBase/UserRepositoryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/testBase/UserRepositoryTest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />

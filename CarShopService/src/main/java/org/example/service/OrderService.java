@@ -1,6 +1,7 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ClientDTO;
 import org.example.dto.OrderDTO;
 import org.example.mapper.OrderMapper;
@@ -10,23 +11,23 @@ import org.example.model.Client;
 import org.example.model.Order;
 import org.example.repository.CarRepository;
 import org.example.repository.OrderRepository;
+
 import java.time.LocalDateTime;
-import java.util.List;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 /**
  * Сервисный класс для управления заказами. Предоставляет методы для создания, получения,
  * обновления и отмены заказов, а также для поиска заказов по различным критериям.
  */
 @AllArgsConstructor
+@Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final CarRepository carRepository;
-
 
     /**
      * Создание нового заказа.
@@ -43,22 +44,18 @@ public class OrderService {
         }
         Car car = optionalCar.get();
 
-
         ClientDTO clientDTO = userService.getClientByUsername(orderDTO.getClientUsername());
-
-
         Client client = UserMapper.INSTANCE.clientDTOToClient(clientDTO);
-
 
         Order order = new Order(car, client);
         orderRepository.addOrder(order);
+
         car.setAvailable(false);
         carRepository.updateCar(car);
         userService.increaseOrderCount(client.getUsername());
 
         return OrderMapper.INSTANCE.orderToOrderDTO(order);
     }
-
 
     /**
      * Получение всех заказов.
@@ -73,7 +70,6 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Получение заказа по его идентификатору.
      *
@@ -83,9 +79,10 @@ public class OrderService {
      */
     public OrderDTO getOrderById(int id) throws SQLException {
         Order order = orderRepository.getOrderById(id);
-        return OrderMapper.INSTANCE.orderToOrderDTO(order);
+        return Optional.ofNullable(order)
+                .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                .orElse(null);
     }
-
 
     /**
      * Обновление статуса заказа.
@@ -99,7 +96,6 @@ public class OrderService {
         return orderRepository.updateOrderStatus(id, status);
     }
 
-
     /**
      * Отмена заказа по его идентификатору.
      *
@@ -110,7 +106,6 @@ public class OrderService {
     public boolean cancelOrder(int id) throws SQLException {
         return orderRepository.cancelOrder(id);
     }
-
 
     /**
      * Получение заказов по диапазону дат.
@@ -127,7 +122,6 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Получение заказов клиента по его имени пользователя.
      *
@@ -142,7 +136,6 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Получение заказов по их статусу.
      *
@@ -156,7 +149,6 @@ public class OrderService {
                 .map(OrderMapper.INSTANCE::orderToOrderDTO)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Получение заказов по идентификатору автомобиля.

@@ -1,249 +1,131 @@
 package org.example.controller;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ValidationException;
-import org.example.config.DatabaseConnectionManager;
-import org.example.repository.CarRepository;
-import org.example.repository.OrderRepository;
-import org.example.repository.UserRepository;
-import org.example.service.OrderService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.OrderDTO;
-import org.example.service.UserService;
-import java.io.IOException;
+import org.example.service.OrderService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Objects;
 
+@Api(value = "Order API", tags = {"Orders"})
+@RestController
+@RequestMapping("/api/orders")
+@Slf4j
+public class OrderController {
 
-/**
- * Контроллер для управления CRUD операциями с заказами.
- * Обрабатывает HTTP-запросы на URL "/api/orders".
- */
-@WebServlet("/api/orders")
-public class OrderController extends HttpServlet {
     private final OrderService orderService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Конструктор контроллера заказов.
-     * Инициализирует все необходимые сервисы и репозитории.
-     */
-    public OrderController() {
-        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-        CarRepository carRepository = new CarRepository(dbConnectionManager);
-        UserRepository userRepository = new UserRepository(dbConnectionManager);
-        OrderRepository orderRepository = new OrderRepository(carRepository, userRepository, dbConnectionManager);
-        UserService userService = new UserService(userRepository);
-        this.orderService = new OrderService(orderRepository, userService, carRepository);
+    public OrderController(OrderService orderService, ObjectMapper objectMapper) {
+        this.orderService = orderService;
+        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Обрабатывает POST-запрос для создания нового заказа.
-     *
-     * @param req  запрос от клиента, содержащий данные заказа.
-     * @param resp ответ клиенту с созданным заказом или ошибкой.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @ApiOperation(value = "Создать новый заказ", notes = "Создает новый заказ и возвращает его данные")
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(@ApiParam(value = "Данные нового заказа", required = true) @RequestBody OrderDTO orderDTO) {
         try {
-            OrderDTO orderDTO = objectMapper.readValue(req.getReader(), OrderDTO.class);
             OrderDTO createdOrder = orderService.createOrder(orderDTO);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getWriter(), createdOrder);
-        } catch (ValidationException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
         } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при создании заказа");
+            log.error("Ошибка при создании заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (RuntimeException e) {
+            log.error("Ошибка при создании заказа", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
-    /**
-     * Обрабатывает GET-запрос для получения списка заказов или определенного заказа.
-     *
-     * @param req  запрос от клиента, содержащий параметры действия.
-     * @param resp ответ клиенту с информацией о заказе или списке заказов.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
+    @ApiOperation(value = "Получить список заказов", notes = "Возвращает список заказов с возможностью фильтрации")
+    @GetMapping
+    public ResponseEntity<List<OrderDTO>> getAllOrders(
+            @ApiParam(value = "Тип действия (фильтрация по различным критериям)") @RequestParam(value = "action", required = false) String action,
+            @ApiParam(value = "ID заказа") @RequestParam(value = "id", required = false) Integer id,
+            @ApiParam(value = "Начальная дата и время (ISO 8601)") @RequestParam(value = "startDateTime", required = false) String startDateTimeStr,
+            @ApiParam(value = "Конечная дата и время (ISO 8601)") @RequestParam(value = "endDateTime", required = false) String endDateTimeStr,
+            @ApiParam(value = "Имя клиента") @RequestParam(value = "clientUsername", required = false) String clientUsername,
+            @ApiParam(value = "Статус заказа") @RequestParam(value = "status", required = false) String status,
+            @ApiParam(value = "ID автомобиля") @RequestParam(value = "carId", required = false) Integer carId) {
 
         try {
-            if (Objects.isNull(action)) {
-                List<OrderDTO> orders = orderService.getAllOrders();
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), orders);
+            if (action == null) {
+                return ResponseEntity.ok(orderService.getAllOrders());
             } else {
-                handleAction(action, req, resp);
+                switch (action) {
+                    case "byId":
+                        return handleGetById(id);
+                    case "byDateRange":
+                        return handleGetByDateRange(startDateTimeStr, endDateTimeStr);
+                    case "byClient":
+                        return ResponseEntity.ok(orderService.getOrdersByClient(clientUsername));
+                    case "byStatus":
+                        return ResponseEntity.ok(orderService.getOrdersByStatus(status));
+                    case "byCar":
+                        return ResponseEntity.ok(orderService.getOrdersByCar(carId));
+                    default:
+                        return ResponseEntity.badRequest().body(null);
+                }
             }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при обработке запроса");
+        } catch (SQLException e) {
+            log.error("Ошибка при получении заказов", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    /**
-     * Обрабатывает действия, переданные через параметр "action" в GET-запросе.
-     *
-     * @param action тип действия.
-     * @param req запрос от клиента.
-     * @param resp ответ клиенту.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleAction(String action, HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        switch (action) {
-            case "byId":
-                handleGetById(req, resp);
-                break;
-            case "byDateRange":
-                handleGetByDateRange(req, resp);
-                break;
-            case "byClient":
-                handleGetByClient(req, resp);
-                break;
-            case "byStatus":
-                handleGetByStatus(req, resp);
-                break;
-            case "byCar":
-                handleGetByCar(req, resp);
-                break;
-            default:
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный параметр действия");
-        }
-    }
-
-    /**
-     * Получает заказ по ID.
-     *
-     * @param req запрос от клиента, содержащий параметр ID заказа.
-     * @param resp ответ клиенту с информацией о заказе.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetById(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        int id = Integer.parseInt(req.getParameter("id"));
+    private ResponseEntity<List<OrderDTO>> handleGetById(Integer id) throws SQLException {
         OrderDTO order = orderService.getOrderById(id);
         if (order != null) {
-            resp.setContentType("application/json");
-            objectMapper.writeValue(resp.getWriter(), order);
+            return ResponseEntity.ok(List.of(order));
         } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
-    /**
-     * Обрабатывает запросы на получение заказов в определенном временном диапазоне.
-     *
-     * @param req  запрос от клиента, содержащий параметры startDateTime и endDateTime.
-     * @param resp ответ клиенту с заказами в указанный временной период в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByDateRange(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        LocalDateTime startDateTime = LocalDateTime.parse(req.getParameter("startDateTime"));
-        LocalDateTime endDateTime = LocalDateTime.parse(req.getParameter("endDateTime"));
-        List<OrderDTO> orders = orderService.getOrdersByDateRange(startDateTime, endDateTime);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов клиента по его имени пользователя.
-     *
-     * @param req  запрос от клиента, содержащий параметр clientUsername.
-     * @param resp ответ клиенту с заказами, связанными с указанным клиентом, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByClient(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        String clientUsername = req.getParameter("clientUsername");
-        List<OrderDTO> orders = orderService.getOrdersByClient(clientUsername);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов по их статусу.
-     *
-     * @param req  запрос от клиента, содержащий параметр status.
-     * @param resp ответ клиенту с заказами, имеющими указанный статус, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        String status = req.getParameter("status");
-        List<OrderDTO> orders = orderService.getOrdersByStatus(status);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов по идентификатору автомобиля.
-     *
-     * @param req  запрос от клиента, содержащий параметр carId.
-     * @param resp ответ клиенту с заказами, связанными с указанным автомобилем, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByCar(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        int carId = Integer.parseInt(req.getParameter("carId"));
-        List<OrderDTO> orders = orderService.getOrdersByCar(carId);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает PUT-запрос для обновления статуса заказа.
-     *
-     * @param req  запрос от клиента, содержащий параметры id заказа и новый статус.
-     * @param resp ответ клиенту с кодом состояния, подтверждающим успешное обновление или сообщение об ошибке.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private ResponseEntity<List<OrderDTO>> handleGetByDateRange(String startDateTimeStr, String endDateTimeStr) {
         try {
-            int id = Integer.parseInt(req.getParameter("id"));
-            String status = req.getParameter("status");
+            LocalDateTime startDateTime = LocalDateTime.parse(startDateTimeStr);
+            LocalDateTime endDateTime = LocalDateTime.parse(endDateTimeStr);
+            return ResponseEntity.ok(orderService.getOrdersByDateRange(startDateTime, endDateTime));
+        } catch (DateTimeParseException e) {
+            log.error("Ошибка при преобразовании даты", e);
+            return ResponseEntity.badRequest().body(null);
+        } catch (SQLException e) {
+            log.error("Ошибка при получении заказов по диапазону дат", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @ApiOperation(value = "Обновить статус заказа", notes = "Обновляет статус заказа по его ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateOrderStatus(@ApiParam(value = "ID заказа", required = true) @PathVariable int id,
+                                                  @ApiParam(value = "Новый статус заказа", required = true) @RequestParam String status) {
+        try {
             boolean updated = orderService.updateOrderStatus(id, status);
-            if (updated) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при обновлении статуса заказа");
+            return updated ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (SQLException e) {
+            log.error("Ошибка при обновлении статуса заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    /**
-     * Обрабатывает DELETE-запрос для отмены заказа.
-     *
-     * @param req  запрос от клиента, содержащий параметр id заказа.
-     * @param resp ответ клиенту с кодом состояния, подтверждающим успешную отмену или сообщение об ошибке.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @ApiOperation(value = "Отменить заказ", notes = "Отменяет заказ по его ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelOrder(@ApiParam(value = "ID заказа", required = true) @PathVariable int id) {
         try {
-            int id = Integer.parseInt(req.getParameter("id"));
             boolean canceled = orderService.cancelOrder(id);
-            if (canceled) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при отмене заказа");
+            return canceled ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (SQLException e) {
+            log.error("Ошибка при отмене заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

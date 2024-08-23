@@ -1,115 +1,79 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.example.config.DatabaseConnectionManager;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.example.dto.ClientDTO;
-import org.example.repository.UserRepository;
 import org.example.service.UserService;
-import jakarta.servlet.annotation.WebServlet;
-import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
+@Api(value = "Client API", tags = {"Clients"})
+@RestController
+@RequestMapping("/api/clients")
+public class ClientController {
 
-/**
- * Класс ClientController является сервлетом, который обрабатывает HTTP-запросы, связанные с клиентами.
- * Он предоставляет действия для фильтрации, сортировки и получения данных о клиентах.
- */
-@WebServlet("/api/clients")
-public class ClientController extends HttpServlet {
-    private UserService userService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserService userService;
 
-    /**
-     * Инициализирует сервлет и настраивает необходимые сервисы для обработки данных о клиентах.
-     *
-     * @throws ServletException если произошла ошибка при инициализации.
-     */
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-        UserRepository userRepository = new UserRepository(dbConnectionManager);
-        this.userService = new UserService(userRepository);
+    @Autowired
+    public ClientController(UserService userService) {
+        this.userService = userService;
     }
 
-    /**
-     * Обрабатывает GET-запросы к эндпоинту /api/clients.
-     * Поддерживает действия такие как получение всех клиентов, фильтрация клиентов по имени, контактной информации или количеству заказов,
-     * а также сортировка клиентов по имени или количеству заказов.
-     *
-     * @param req  объект HttpServletRequest, содержащий запрос клиента к сервлету
-     * @param resp объект HttpServletResponse, содержащий ответ сервлета клиенту
-     * @throws ServletException если произошла ошибка при обработке запроса
-     * @throws IOException      если произошла ошибка ввода-вывода при обработке запроса
-     */
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
+    @ApiOperation(value = "Получить список клиентов", notes = "Получить список клиентов с возможностью фильтрации и сортировки")
+    @GetMapping
+    public ResponseEntity<?> getClients(
+            @ApiParam(value = "Тип действия (фильтрация/сортировка)") @RequestParam(value = "action", required = false) String action,
+            @ApiParam(value = "Имя клиента") @RequestParam(value = "name", required = false) String name,
+            @ApiParam(value = "Контактная информация клиента") @RequestParam(value = "contactInfo", required = false) String contactInfo,
+            @ApiParam(value = "Минимальное количество заказов") @RequestParam(value = "minOrders", required = false) Integer minOrders,
+            @ApiParam(value = "Максимальное количество заказов") @RequestParam(value = "maxOrders", required = false) Integer maxOrders) {
 
         try {
             if (Objects.isNull(action)) {
-                // Получить всех клиентов
                 List<ClientDTO> clientDTOs = userService.getAllClients();
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), clientDTOs);
+                return ResponseEntity.ok(clientDTOs);
             } else {
-                // Используем switch-case для обработки действия
                 switch (action) {
-                    case "filterByName" -> {
-                        String name = req.getParameter("name");
+                    case "filterByName":
                         if (Objects.nonNull(name)) {
-                            List<ClientDTO> filteredClients = userService.filterClientsByName(name);
-                            resp.setContentType("application/json");
-                            objectMapper.writeValue(resp.getWriter(), filteredClients);
+                            List<ClientDTO> filteredClientsByName = userService.filterClientsByName(name);
+                            return ResponseEntity.ok(filteredClientsByName);
                         } else {
-                            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя не указано");
+                            return ResponseEntity.badRequest().body("Имя не указано");
                         }
-                    }
-                    case "filterByContactInfo" -> {
-                        String contactInfo = req.getParameter("contactInfo");
+                    case "filterByContactInfo":
                         if (Objects.nonNull(contactInfo)) {
-                            List<ClientDTO> filteredClients = userService.filterClientsByContactInfo(contactInfo);
-                            resp.setContentType("application/json");
-                            objectMapper.writeValue(resp.getWriter(), filteredClients);
+                            List<ClientDTO> filteredClientsByContactInfo = userService.filterClientsByContactInfo(contactInfo);
+                            return ResponseEntity.ok(filteredClientsByContactInfo);
                         } else {
-                            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Контактная информация не указана");
+                            return ResponseEntity.badRequest().body("Контактная информация не указана");
                         }
-                    }
-                    case "sortByName" -> {
-                        List<ClientDTO> sortedClients = userService.sortClientsByName();
-                        resp.setContentType("application/json");
-                        objectMapper.writeValue(resp.getWriter(), sortedClients);
-                    }
-                    case "filterByOrders" -> {
-                        try {
-                            int minOrders = Integer.parseInt(req.getParameter("minOrders"));
-                            int maxOrders = Integer.parseInt(req.getParameter("maxOrders"));
-                            List<ClientDTO> filteredClients = userService.filterClientsByOrders(minOrders, maxOrders);
-                            resp.setContentType("application/json");
-                            objectMapper.writeValue(resp.getWriter(), filteredClients);
-                        } catch (NumberFormatException e) {
-                            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный формат чисел для заказов");
+                    case "sortByName":
+                        List<ClientDTO> sortedClientsByName = userService.sortClientsByName();
+                        return ResponseEntity.ok(sortedClientsByName);
+                    case "filterByOrders":
+                        if (minOrders != null && maxOrders != null) {
+                            List<ClientDTO> filteredClientsByOrders = userService.filterClientsByOrders(minOrders, maxOrders);
+                            return ResponseEntity.ok(filteredClientsByOrders);
+                        } else {
+                            return ResponseEntity.badRequest().body("Неверный формат чисел для заказов");
                         }
-                    }
-                    case "sortByOrders" -> {
-                        List<ClientDTO> sortedClients = userService.sortClientsByOrders();
-                        resp.setContentType("application/json");
-                        objectMapper.writeValue(resp.getWriter(), sortedClients);
-                    }
-                    default -> {
-                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверное действие");
-                    }
+                    case "sortByOrders":
+                        List<ClientDTO> sortedClientsByOrders = userService.sortClientsByOrders();
+                        return ResponseEntity.ok(sortedClientsByOrders);
+                    default:
+                        return ResponseEntity.badRequest().body("Неверное действие");
                 }
             }
         } catch (SQLException e) {
-            // Обработка исключений и возвращение статуса ошибки сервера
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка обработки запроса");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка обработки запроса");
         }
     }
 }

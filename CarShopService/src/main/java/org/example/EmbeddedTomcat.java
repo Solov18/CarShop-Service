@@ -1,33 +1,29 @@
 package org.example;
 
-import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
-import org.example.controller.CarController;
-import org.example.controller.ClientController;
-import org.example.controller.OrderController;
-import org.example.controller.UserController;
-
+import org.example.config.AppConfig;
+import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
 public class EmbeddedTomcat {
     public static void main(String[] args) throws Exception {
-
+        // Создаем экземпляр Tomcat
         Tomcat tomcat = new Tomcat();
-        tomcat.setPort(8080);
+        tomcat.setPort(8080); // Устанавливаем порт для Tomcat
 
-        Context ctx = tomcat.addContext("", null);
+        // Создаем Spring ApplicationContext
+        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
+        applicationContext.register(AppConfig.class);
 
-        Tomcat.addServlet(ctx, "carController", new CarController());
-        ctx.addServletMappingDecoded("/api/cars", "carController");
+        // Создаем и регистрируем DispatcherServlet
+        DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
 
-        Tomcat.addServlet(ctx, "clientController", new ClientController());
-        ctx.addServletMappingDecoded("/api/clients", "clientController");
+        // Добавляем контекст и сервлет для обработки запросов
+        tomcat.addContext("", System.getProperty("java.io.tmpdir")); // Создаем корневой контекст
+        tomcat.addServlet("", "dispatcherServlet", dispatcherServlet).setLoadOnStartup(1);
+        tomcat.getConnector().setURIEncoding("UTF-8"); // Устанавливаем кодировку
 
-        Tomcat.addServlet(ctx, "orderController", new OrderController());
-        ctx.addServletMappingDecoded("/api/orders", "orderController");
-
-        Tomcat.addServlet(ctx, "userController", new UserController());
-        ctx.addServletMappingDecoded("/api/users", "userController");
-
+        // Запускаем сервер
         tomcat.start();
         tomcat.getServer().await();
     }

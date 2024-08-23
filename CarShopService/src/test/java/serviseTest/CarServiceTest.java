@@ -1,12 +1,8 @@
 package serviseTest;
 
-import org.example.config.DatabaseConnectionManager;
-import org.example.model.Car;
 import org.example.repository.CarRepository;
 import org.example.service.CarService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.testcontainers.containers.PostgreSQLContainer;
 import java.sql.Connection;

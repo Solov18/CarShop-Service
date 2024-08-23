@@ -5,6 +5,8 @@ import org.example.dto.CarDTO;
 import org.example.mapper.CarMapper;
 import org.example.model.Car;
 import org.example.repository.CarRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
  * Сервисный класс для управления автомобилями. Предоставляет методы для добавления,
  * получения, обновления и удаления автомобилей, а также для поиска автомобилей по различным критериям.
  */
+@Service
 @AllArgsConstructor
 public class CarService {
 

@@ -1,6 +1,5 @@
 package testBase;
 
-import org.example.config.DatabaseConnectionManager;
 import org.example.model.Admin;
 import org.example.model.Client;
 import org.example.model.User;
