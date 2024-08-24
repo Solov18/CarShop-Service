@@ -1,20 +1,22 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.OrderDTO;
+import org.example.exception.OrderNotFoundException;
+import org.example.exception.InvalidOrderDataException;
+import org.example.exception.DatabaseException;
 import org.example.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 
 @Api(value = "Order API", tags = {"Orders"})
 @RestController
@@ -23,11 +25,9 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final ObjectMapper objectMapper;
 
-    public OrderController(OrderService orderService, ObjectMapper objectMapper) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.objectMapper = objectMapper;
     }
 
     @ApiOperation(value = "Создать новый заказ", notes = "Создает новый заказ и возвращает его данные")
@@ -36,12 +36,12 @@ public class OrderController {
         try {
             OrderDTO createdOrder = orderService.createOrder(orderDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
-        } catch (SQLException e) {
+        } catch (DatabaseException e) {
             log.error("Ошибка при создании заказа", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        } catch (RuntimeException e) {
-            log.error("Ошибка при создании заказа", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (InvalidOrderDataException e) {
+            log.error("Ошибка в данных заказа", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -72,21 +72,26 @@ public class OrderController {
                     case "byCar":
                         return ResponseEntity.ok(orderService.getOrdersByCar(carId));
                     default:
-                        return ResponseEntity.badRequest().body(null);
+                        return ResponseEntity.badRequest().build();
                 }
             }
-        } catch (SQLException e) {
+        } catch (DatabaseException e) {
             log.error("Ошибка при получении заказов", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    private ResponseEntity<List<OrderDTO>> handleGetById(Integer id) throws SQLException {
-        OrderDTO order = orderService.getOrderById(id);
-        if (order != null) {
-            return ResponseEntity.ok(List.of(order));
-        } else {
+    private ResponseEntity<List<OrderDTO>> handleGetById(Integer id) {
+        try {
+
+            OrderDTO orderDTO = orderService.getOrderById(id);
+            return ResponseEntity.ok(List.of(orderDTO));
+        } catch (OrderNotFoundException e) {
+            log.error("Заказ с ID {} не найден", id, e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (DatabaseException e) {
+            log.error("Ошибка базы данных при получении заказа с ID {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -97,10 +102,10 @@ public class OrderController {
             return ResponseEntity.ok(orderService.getOrdersByDateRange(startDateTime, endDateTime));
         } catch (DateTimeParseException e) {
             log.error("Ошибка при преобразовании даты", e);
-            return ResponseEntity.badRequest().body(null);
-        } catch (SQLException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (DatabaseException e) {
             log.error("Ошибка при получении заказов по диапазону дат", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -111,7 +116,10 @@ public class OrderController {
         try {
             boolean updated = orderService.updateOrderStatus(id, status);
             return updated ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (SQLException e) {
+        } catch (OrderNotFoundException e) {
+            log.error("Заказ не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (DatabaseException e) {
             log.error("Ошибка при обновлении статуса заказа", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -123,7 +131,10 @@ public class OrderController {
         try {
             boolean canceled = orderService.cancelOrder(id);
             return canceled ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (SQLException e) {
+        } catch (OrderNotFoundException e) {
+            log.error("Заказ не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (DatabaseException e) {
             log.error("Ошибка при отмене заказа", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

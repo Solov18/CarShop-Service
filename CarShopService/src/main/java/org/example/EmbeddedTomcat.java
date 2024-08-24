@@ -1,5 +1,6 @@
 package org.example;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.example.config.AppConfig;
 import org.springframework.web.servlet.DispatcherServlet;
@@ -18,9 +19,9 @@ public class EmbeddedTomcat {
         // Создаем и регистрируем DispatcherServlet
         DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
 
-        // Добавляем контекст и сервлет для обработки запросов
-        tomcat.addContext("", System.getProperty("java.io.tmpdir")); // Создаем корневой контекст
-        tomcat.addServlet("", "dispatcherServlet", dispatcherServlet).setLoadOnStartup(1);
+        // Добавляем корневой контекст и сервлет для обработки запросов
+        Context context = tomcat.addContext("", null); // Используйте null или пустую строку для временного каталога
+        tomcat.addServlet("", "dispatcherServlet", dispatcherServlet).addMapping("/*");
         tomcat.getConnector().setURIEncoding("UTF-8"); // Устанавливаем кодировку
 
         // Запускаем сервер

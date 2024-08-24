@@ -1,4 +1,13 @@
-database:
-  url: jdbc:postgresql://localhost:5433/mydatabase
-  username: user
-  password: password
+server:
+  port: 8080  # Убедитесь, что порт совпадает с тем, который вы используете в приложении
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/mydatabase
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver  # Укажите драйвер для базы данных
+  jpa:
+    hibernate:
+      ddl-auto: update  # Или другой режим, в зависимости от вашего сценария
+    show-sql: true  # Для отладки SQL-запросов

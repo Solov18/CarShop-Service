@@ -1,5 +1,6 @@
 package org.example.config;
 
+import org.example.logi.RequestContextFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -8,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import javax.sql.DataSource;
-import org.example.logi.RequestContextFilter;
+
 
 @Configuration
 @EnableWebMvc
@@ -39,10 +40,12 @@ public class AppConfig implements WebMvcConfigurer {
     // Настройка Swagger UI ресурсов
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Обслуживание HTML-файла Swagger UI
         registry.addResourceHandler("/swagger-ui.html")
-                .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
+                .addResourceLocations("classpath:/META-INF/resources/dist/");
 
-        registry.addResourceHandler("/webjars/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        // Настройка для обслуживания ресурсов, таких как JS и CSS
+        registry.addResourceHandler("/swagger-ui/**")
+                .addResourceLocations("classpath:/META-INF/resources/webpack");
     }
 }

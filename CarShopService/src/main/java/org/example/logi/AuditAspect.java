@@ -6,18 +6,21 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Pointcut;
 import org.example.repository.AuditLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 
-/**
- * Аспект для аудита, который перехватывает вызовы методов контроллеров
- * и записывает информацию об их выполнении в журнал аудита.
- */
 @Aspect
 @Component
 public class AuditAspect {
+
+    // Добавляем логгер
+    private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
 
     private final AuditLogRepository auditLogRepository;
 
@@ -26,7 +29,7 @@ public class AuditAspect {
         this.auditLogRepository = auditLogRepository;
     }
 
-    @Pointcut("execution(* com.example.controller.*.*(..))")
+    @Pointcut("execution(* org.example.controller..*(..))")
     public void controllerMethods() {}
 
     @AfterReturning(pointcut = "controllerMethods()", returning = "result")
@@ -41,12 +44,16 @@ public class AuditAspect {
         log.setUsername(username);
         log.setDetails(details);
 
+        // Используем логгер для вывода сообщения
+        logger.info("Saving audit log: {}", log);
+
         auditLogRepository.save(log);
     }
 
     private String getCurrentUsername() {
-        HttpServletRequest request = RequestContext.getRequest();
-        if (request != null) {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
             Object user = request.getSession().getAttribute("currentUser");
             return user != null ? user.toString() : "unknown";
         }

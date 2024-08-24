@@ -8,6 +8,9 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+/**
+ * Конфигурация Swagger для документирования API.
+ */
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {

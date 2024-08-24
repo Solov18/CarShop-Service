@@ -1,6 +1,5 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.example.dto.CarDTO;
@@ -19,12 +18,10 @@ import java.util.Objects;
 public class CarController {
 
     private final CarService carService;
-    private final ObjectMapper objectMapper;
 
     @Autowired
-    public CarController(CarService carService, ObjectMapper objectMapper) {
+    public CarController(CarService carService) {
         this.carService = carService;
-        this.objectMapper = objectMapper;
     }
 
     @ApiOperation(value = "Получить список автомобилей", notes = "Получение списка всех доступных автомобилей или поиск по параметрам")
@@ -48,18 +45,44 @@ public class CarController {
                 return ResponseEntity.ok(carsDTO);
             } else {
                 List<CarDTO> carsDTO = carService.getAllAvailableCars();
-                return ResponseEntity.ok(carsDTO);
+                return carsDTO.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(carsDTO);
             }
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "Получить список автомобилей по диапазону цен", notes = "Получение списка автомобилей, у которых цена в заданном диапазоне")
+    @GetMapping("/price-range")
+    public ResponseEntity<?> getCarsByPriceRange(
+            @RequestParam("minPrice") double minPrice,
+            @RequestParam("maxPrice") double maxPrice) {
+        try {
+            List<CarDTO> carsDTO = carService.getCarsByPriceRange(minPrice, maxPrice);
+            return carsDTO.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(carsDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @ApiOperation(value = "Получить список автомобилей по диапазону годов", notes = "Получение списка автомобилей, у которых год выпуска в заданном диапазоне")
+    @GetMapping("/year-range")
+    public ResponseEntity<?> getCarsByYearRange(
+            @RequestParam("minYear") int minYear,
+            @RequestParam("maxYear") int maxYear) {
+        try {
+            List<CarDTO> carsDTO = carService.getCarsByYearRange(minYear, maxYear);
+            return carsDTO.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(carsDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
     @ApiOperation(value = "Добавить новый автомобиль", notes = "Добавление новой записи об автомобиле")
     @PostMapping
-    public ResponseEntity<Void> addCar(@RequestBody CarDTO carDTO) {
-        carService.addCar(carDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<CarDTO> addCar(@RequestBody CarDTO carDTO) {
+        CarDTO addedCar = carService.addCar(carDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(addedCar);
     }
 
     @ApiOperation(value = "Обновить информацию об автомобиле", notes = "Обновление существующей записи об автомобиле")
@@ -67,7 +90,7 @@ public class CarController {
     public ResponseEntity<String> updateCar(@RequestBody CarDTO carDTO) {
         boolean updated = carService.updateCar(carDTO);
         if (updated) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok("Автомобиль успешно обновлён");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Автомобиль не найден для обновления");
         }

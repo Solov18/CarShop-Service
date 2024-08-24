@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
+import org.example.exception.ClientNotFoundException;
+import org.example.exception.UserAlreadyExistsException;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -63,12 +65,12 @@ public class UserController {
         try {
             ClientDTO clientDTO = userService.getClientByUsername(username);
             return ResponseEntity.ok(clientDTO);
+        } catch (ClientNotFoundException e) {
+            log.error("Клиент не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (SQLException e) {
             log.error("Ошибка при получении клиента по имени пользователя", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при получении клиента");
-        } catch (RuntimeException e) {
-            log.error("Ошибка при получении клиента по имени пользователя", e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -79,12 +81,12 @@ public class UserController {
         try {
             userService.registerUser(userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Пользователь зарегистрирован");
+        } catch (UserAlreadyExistsException e) {
+            log.error("Ошибка при регистрации пользователя", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (SQLException e) {
             log.error("Ошибка при регистрации пользователя", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка регистрации пользователя");
-        } catch (RuntimeException e) {
-            log.error("Ошибка при регистрации пользователя", e);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage()); // Конфликт, если пользователь уже существует
         }
     }
 
