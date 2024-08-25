@@ -10,16 +10,30 @@ import java.util.List;
 import java.util.Optional;
 
 
+/**
+ * Репозиторий для работы с данными об автомобилях в базе данных.
+ */
 @AllArgsConstructor
 public class CarRepository {
 
     private DatabaseConnectionManager dbConnectionManager;
 
+    /**
+     * Получает соединение с базой данных.
+     *
+     * @return Соединение с базой данных.
+     * @throws SQLException Если возникает ошибка при установлении соединения.
+     */
     private Connection getConnection() throws SQLException {
         return dbConnectionManager.getConnection();
     }
 
-    // Добавление нового автомобиля в базу данных
+    /**
+     * Добавляет новый автомобиль в базу данных.
+     *
+     * @param car Объект автомобиля для добавления.
+     * @throws RuntimeException Если возникает ошибка при добавлении автомобиля.
+     */
     public void addCar(Car car) {
         String sql = "INSERT INTO cars (make, model, year, price, condition, is_available) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection connection = getConnection();
@@ -37,7 +51,12 @@ public class CarRepository {
         }
     }
 
-    // Получение автомобиля по ID
+    /**
+     * Получает автомобиль по его идентификатору.
+     *
+     * @param id Идентификатор автомобиля.
+     * @return Объект {@link Optional}, содержащий автомобиль с заданным идентификатором, если таковой найден.
+     */
     public Optional<Car> getCarById(int id) {
         String sql = "SELECT * FROM cars WHERE id = ?";
         try (Connection connection = getConnection();
@@ -64,7 +83,12 @@ public class CarRepository {
         return Optional.empty();
     }
 
-    // Получение всех доступных автомобилей
+    /**
+     * Получает все доступные автомобили.
+     *
+     * @return Список доступных автомобилей.
+     * @throws RuntimeException Если возникает ошибка при получении доступных автомобилей.
+     */
     public List<Car> getAllAvailableCars() {
         String sql = "SELECT * FROM cars WHERE is_available = true";
         List<Car> cars = new ArrayList<>();
@@ -92,7 +116,14 @@ public class CarRepository {
         return cars;
     }
 
-    // Обновление информации об автомобиле
+    /**
+     * Обновляет информацию об автомобиле.
+     *
+     * @param car Объект автомобиля с обновленными данными.
+     * @return {@code true}, если информация об автомобиле была обновлена, {@code false} в противном случае.
+     * @throws IllegalArgumentException Если передан объект {@code car} равен {@code null}.
+     * @throws RuntimeException Если возникает ошибка при обновлении автомобиля.
+     */
     public boolean updateCar(Car car) {
         if (car == null) {
             throw new IllegalArgumentException("Объект Car не может быть null");
@@ -119,7 +150,13 @@ public class CarRepository {
         }
     }
 
-    // Удаление автомобиля по ID
+    /**
+     * Удаляет автомобиль по его идентификатору.
+     *
+     * @param id Идентификатор автомобиля для удаления.
+     * @return {@code true}, если автомобиль был удален, {@code false} в противном случае.
+     * @throws RuntimeException Если возникает ошибка при удалении автомобиля.
+     */
     public boolean removeCar(int id) {
         String sql = "DELETE FROM cars WHERE id = ?";
         try (Connection connection = getConnection();
@@ -137,7 +174,18 @@ public class CarRepository {
         }
     }
 
-    // Поиск автомобилей по критериям
+    /**
+     * Выполняет поиск автомобилей по заданным критериям.
+     *
+     * @param make Марка автомобиля (может быть {@code null}).
+     * @param model Модель автомобиля (может быть {@code null}).
+     * @param year Год выпуска автомобиля (может быть {@code null}).
+     * @param minPrice Минимальная цена автомобиля (может быть {@code null}).
+     * @param maxPrice Максимальная цена автомобиля (может быть {@code null}).
+     * @param condition Состояние автомобиля (может быть {@code null}).
+     * @return Список автомобилей, соответствующих заданным критериям.
+     * @throws RuntimeException Если возникает ошибка при выполнении поиска автомобилей.
+     */
     public List<Car> searchCars(String make, String model, Integer year, Double minPrice, Double maxPrice, String condition) {
 
         StringBuilder sql = new StringBuilder("SELECT * FROM cars WHERE 1=1");
@@ -183,7 +231,14 @@ public class CarRepository {
         return cars;
     }
 
-    // Получение автомобилей по диапазону цен
+    /**
+     * Получает автомобили в заданном диапазоне цен.
+     *
+     * @param minPrice Минимальная цена.
+     * @param maxPrice Максимальная цена.
+     * @return Список автомобилей, цена которых находится в заданном диапазоне.
+     * @throws RuntimeException Если возникает ошибка при выполнении запроса.
+     */
     public List<Car> getCarsByPriceRange(double minPrice, double maxPrice) {
         String sql = "SELECT * FROM cars WHERE price BETWEEN ? AND ?";
         List<Car> cars = new ArrayList<>();
@@ -214,7 +269,14 @@ public class CarRepository {
         return cars;
     }
 
-    // Получение автомобилей по диапазону годов
+    /**
+     * Получает автомобили в заданном диапазоне годов выпуска.
+     *
+     * @param minYear Минимальный год выпуска.
+     * @param maxYear Максимальный год выпуска.
+     * @return Список автомобилей, год выпуска которых находится в заданном диапазоне.
+     * @throws RuntimeException Если возникает ошибка при выполнении запроса.
+     */
     public List<Car> getCarsByYearRange(int minYear, int maxYear) {
         String sql = "SELECT * FROM cars WHERE year BETWEEN ? AND ?";
         List<Car> cars = new ArrayList<>();
@@ -245,7 +307,13 @@ public class CarRepository {
         }
         return cars;
     }
-    // Получение автомобиля по марке и модели
+    /**
+     * Получает автомобиль по марке и модели.
+     *
+     * @param make Марка автомобиля.
+     * @param model Модель автомобиля.
+     * @return Объект {@link Optional}, содержащий автомобиль с заданной маркой и моделью, если таковой найден.
+     */
     public Optional<Car> getCarByMakeAndModel(String make, String model) {
         String sql = "SELECT * FROM cars WHERE make = ? AND model = ?";
         try (Connection connection = getConnection();

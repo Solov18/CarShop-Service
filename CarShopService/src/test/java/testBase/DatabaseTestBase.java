@@ -21,7 +21,7 @@ public class DatabaseTestBase {
 
     @BeforeEach
     public void setUp() {
-        // Убедитесь, что параметры подключения правильно установлены
+
         System.setProperty("db.url", postgresContainer.getJdbcUrl());
         System.setProperty("db.username", postgresContainer.getUsername());
         System.setProperty("db.password", postgresContainer.getPassword());
@@ -29,7 +29,7 @@ public class DatabaseTestBase {
 
     @AfterEach
     public void tearDown() {
-        // Очистка данных после каждого теста, если нужно
+
     }
 
     protected Connection getConnection() throws SQLException {
