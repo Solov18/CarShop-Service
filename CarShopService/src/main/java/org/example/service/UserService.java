@@ -2,10 +2,14 @@ package org.example.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
 import org.example.exception.ClientNotFoundException;
 import org.example.exception.UserAlreadyExistsException;
+import org.example.mapper.AdminMapper;
+import org.example.mapper.ClientMapper;
+import org.example.mapper.ManagerMapper;
 import org.example.mapper.UserMapper;
 import org.example.model.Client;
 import org.example.model.User;
@@ -23,10 +27,13 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
+    private final UserMapper userMapper; // Универсальный маппер
+    private final AdminMapper adminMapper;
+    private final ClientMapper clientMapper;
+    private final ManagerMapper managerMapper;
 
-    public void registerUser(UserDTO userDTO) throws SQLException {
-        User user = userMapper.userDTOToUser(userDTO);
+    public void registerUser(AuthenticationDTO authenticationDTO) throws SQLException {
+        User user = convertToUser(authenticationDTO);
         if (userExists(user.getUsername())) {
             throw new UserAlreadyExistsException("Пользователь с таким именем уже существует");
         }
@@ -51,7 +58,7 @@ public class UserService {
         return userRepository.getAllUsers().stream()
                 .filter(Client.class::isInstance)
                 .map(Client.class::cast)
-                .map(userMapper::clientToClientDTO)
+                .map(clientMapper::clientToClientDTO)
                 .collect(Collectors.toList());
     }
 
@@ -112,8 +119,21 @@ public class UserService {
     public ClientDTO getClientByUsername(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user instanceof Client) {
-            return userMapper.clientToClientDTO((Client) user);
+            return clientMapper.clientToClientDTO((Client) user);
         }
         throw new ClientNotFoundException("Клиент с таким именем не найден");
+    }
+
+    private User convertToUser(AuthenticationDTO authenticationDTO) {
+        switch (authenticationDTO.getUserType()) {
+            case "admin":
+                return adminMapper.authenticationDTOToAdmin(authenticationDTO);
+            case "client":
+                return clientMapper.authenticationDTOToClient(authenticationDTO);
+            case "manager":
+                return managerMapper.authenticationDTOToManager(authenticationDTO);
+            default:
+                throw new IllegalArgumentException("Unknown user type: " + authenticationDTO.getUserType());
+        }
     }
 }

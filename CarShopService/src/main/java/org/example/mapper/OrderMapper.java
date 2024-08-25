@@ -26,16 +26,5 @@ public interface OrderMapper {
     })
     Order orderDTOToOrder(OrderDTO orderDTO);
 
-    // Метод для создания Car из ID (заглушка, в реальном приложении будет использоваться сервис)
-    default Car mapCarIdToCar(int carId) {
-        Car car = new Car();
-        car.setId(carId);
-        return car;
-    }
 
-    // Метод для создания Client из username (заглушка, в реальном приложении будет использоваться сервис)
-    default Client mapClientUsernameToClient(String clientUsername) {
-        Client client = new Client(clientUsername, "", ""); // Здесь лучше использовать сервис для поиска по username
-        return client;
-    }
 }

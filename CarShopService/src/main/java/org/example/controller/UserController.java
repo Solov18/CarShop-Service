@@ -77,9 +77,9 @@ public class UserController {
     @ApiOperation(value = "Регистрация пользователя", notes = "Регистрация нового пользователя в системе")
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(
-            @ApiParam(value = "Данные нового пользователя", required = true) @RequestBody UserDTO userDTO) {
+            @ApiParam(value = "Данные нового пользователя", required = true) @RequestBody AuthenticationDTO authenticationDTO) {
         try {
-            userService.registerUser(userDTO);
+            userService.registerUser(authenticationDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Пользователь зарегистрирован");
         } catch (UserAlreadyExistsException e) {
             log.error("Ошибка при регистрации пользователя", e);

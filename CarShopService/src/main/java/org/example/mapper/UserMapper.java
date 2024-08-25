@@ -17,21 +17,29 @@ public interface UserMapper {
 
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
+    // Универсальные преобразования для DTO и модели User
     @Mapping(target = "role", source = "role")
     UserDTO userToUserDTO(User user);
 
+    @Mapping(target = "role", source = "role")
     User userDTOToUser(UserDTO userDTO);
 
-    // Маппинг для конкретных типов
+    // Преобразования для конкретных типов пользователей
+    @Mapping(target = "role", ignore = true)
     ClientDTO clientToClientDTO(Client client);
 
+    @Mapping(target = "role", ignore = true)
     Client clientDTOToClient(ClientDTO clientDTO);
 
+    @Mapping(target = "role", ignore = true)
     ManagerDTO managerToManagerDTO(Manager manager);
 
+    @Mapping(target = "role", ignore = true)
     Manager managerDTOToManager(ManagerDTO managerDTO);
 
+    @Mapping(target = "role", ignore = true)
     AdminDTO adminToAdminDTO(Admin admin);
 
+    @Mapping(target = "role", ignore = true)
     Admin adminDTOToAdmin(AdminDTO adminDTO);
 }
