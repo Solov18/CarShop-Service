@@ -53,7 +53,7 @@ public class OrderService {
             Car car = optionalCar.get();
 
             ClientDTO clientDTO = userService.getClientByUsername(orderDTO.getClientUsername());
-            Client client = userMapper.clientDTOToClient(clientDTO);  // Используем инъекцию
+            Client client = userMapper.clientDTOToClient(clientDTO);
 
             Order order = new Order(car, client);
             orderRepository.addOrder(order);
@@ -81,7 +81,7 @@ public class OrderService {
             return orders.stream()
                     .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении всех заказов", e);
             throw new DatabaseException("Ошибка при получении всех заказов", e);
         }
@@ -101,7 +101,7 @@ public class OrderService {
             return Optional.ofNullable(order)
                     .map(orderMapper::orderToOrderDTO)
                     .orElseThrow(() -> new OrderNotFoundException("Заказ с ID " + id + " не найден"));
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении заказа с ID " + id, e);
             throw new DatabaseException("Ошибка при получении заказа с ID " + id, e);
         }
@@ -118,7 +118,7 @@ public class OrderService {
     public boolean updateOrderStatus(int id, String status) {
         try {
             return orderRepository.updateOrderStatus(id, status);
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при обновлении статуса заказа с ID " + id, e);
             throw new DatabaseException("Ошибка при обновлении статуса заказа с ID " + id, e);
         }
@@ -134,7 +134,7 @@ public class OrderService {
     public boolean cancelOrder(int id) {
         try {
             return orderRepository.cancelOrder(id);
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при отмене заказа с ID " + id, e);
             throw new DatabaseException("Ошибка при отмене заказа с ID " + id, e);
         }
@@ -154,7 +154,7 @@ public class OrderService {
             return orders.stream()
                     .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении заказов по диапазону дат", e);
             throw new DatabaseException("Ошибка при получении заказов по диапазону дат", e);
         }
@@ -173,7 +173,7 @@ public class OrderService {
             return orders.stream()
                     .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении заказов клиента", e);
             throw new DatabaseException("Ошибка при получении заказов клиента", e);
         }
@@ -192,7 +192,7 @@ public class OrderService {
             return orders.stream()
                     .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении заказов по статусу", e);
             throw new DatabaseException("Ошибка при получении заказов по статусу", e);
         }
@@ -211,7 +211,7 @@ public class OrderService {
             return orders.stream()
                     .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+        } catch (Exception e) {
             log.error("Ошибка при получении заказов по автомобилю", e);
             throw new DatabaseException("Ошибка при получении заказов по автомобилю", e);
         }

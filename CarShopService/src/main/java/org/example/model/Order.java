@@ -24,7 +24,7 @@ public class Order {
         this.date = LocalDateTime.now();
     }
 
-    // Конструктор для чтения из базы данных
+
     public Order(int id, Car car, Client client, String status, LocalDateTime date) {
         this.id = id;
         this.car = car;

@@ -17,7 +17,7 @@ import java.util.List;
 public class UserRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    // Константы для SQL-запросов
+
     private static final String INSERT_USER_SQL = "INSERT INTO users (username, password, role, contact_info) VALUES (?, ?, ?, ?)";
     private static final String SELECT_USER_BY_USERNAME_SQL = "SELECT * FROM users WHERE username = ?";
     private static final String SELECT_ALL_USERS_SQL = "SELECT * FROM users";

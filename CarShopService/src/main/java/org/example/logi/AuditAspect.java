@@ -1,9 +1,10 @@
 package org.example.logi;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.example.repository.AuditLogRepository;
 import org.slf4j.Logger;
@@ -15,6 +16,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 
+/**
+ * Класс, отвечающий за аспект аудита, который записывает информацию о выполнении методов контроллеров.
+ *
+ * Этот аспект использует Spring AOP для перехвата выполнения методов контроллеров и записи информации
+ * о выполнении запросов в репозиторий аудита.
+ *
+ */
 @Aspect
 @Component
 public class AuditAspect {
@@ -29,9 +37,26 @@ public class AuditAspect {
         this.auditLogRepository = auditLogRepository;
     }
 
+    /**
+     * Определяет точку среза для методов контроллеров.
+     *
+     * Этот метод используется для указания на все методы в пакетах контроллеров.
+     *
+     */
     @Pointcut("execution(* org.example.controller..*(..))")
     public void controllerMethods() {}
 
+
+    /**
+     * Логирует выполнение метода контроллера после его успешного завершения.
+     *
+     * Этот метод срабатывает после выполнения любого метода, определенного в точке среза {@link #controllerMethods()},
+     * и сохраняет запись о выполнении в репозитории аудита.
+     *
+     *
+     * @param joinPoint объект, предоставляющий информацию о выполнении метода.
+     * @param result результат выполнения метода.
+     */
     @AfterReturning(pointcut = "controllerMethods()", returning = "result")
     public void logAfterControllerCall(JoinPoint joinPoint, Object result) {
         String actionType = joinPoint.getSignature().toShortString();
@@ -44,12 +69,21 @@ public class AuditAspect {
         log.setUsername(username);
         log.setDetails(details);
 
-        // Используем логгер для вывода сообщения
+
         logger.info("Saving audit log: {}", log);
 
         auditLogRepository.save(log);
     }
 
+    /**
+     * Получает имя текущего пользователя из текущего HTTP-запроса.
+     *
+     * Этот метод извлекает имя пользователя из сессии HTTP-запроса.
+     * Если имя пользователя не найдено, возвращается "unknown".
+     *
+     *
+     * @return имя текущего пользователя или "unknown", если имя пользователя не найдено.
+     */
     private String getCurrentUsername() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes != null) {

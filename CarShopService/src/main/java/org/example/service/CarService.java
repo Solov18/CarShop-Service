@@ -7,7 +7,6 @@ import org.example.mapper.CarMapper;
 import org.example.model.Car;
 import org.example.repository.CarRepository;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -19,7 +19,7 @@ public class CarRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    // Константы для SQL-запросов
+
     private static final String INSERT_CAR_SQL = "INSERT INTO cars (make, model, year, price, condition, is_available) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String SELECT_CAR_BY_ID_SQL = "SELECT * FROM cars WHERE id = ?";
     private static final String SELECT_ALL_AVAILABLE_CARS_SQL = "SELECT * FROM cars WHERE is_available = true";

@@ -17,7 +17,7 @@ public interface ClientMapper {
     @Mappings({
             @Mapping(source = "username", target = "username"),
             @Mapping(source = "password", target = "password")
-            // Не нужно указывать contactInfo и orderCount, если они не в DTO
+
     })
     Client authenticationDTOToClient(AuthenticationDTO authenticationDTO);
 }

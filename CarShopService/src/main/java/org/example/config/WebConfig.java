@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
         "org.example.controller",
         "org.example.service",
         "org.example.repository",
-        "org.example.mapper"  // Добавляем пакет с маперами
+        "org.example.mapper"
 })
 public class WebConfig implements WebMvcConfigurer {
 

@@ -21,7 +21,7 @@ public class OrderRepository {
     private final CarRepository carRepository;
     private final UserRepository userRepository;
 
-    // Константы для SQL-запросов
+
     private static final String INSERT_ORDER_SQL = "INSERT INTO orders (car_id, client_username, status, date) VALUES (?, ?, ?, ?)";
     private static final String SELECT_ORDER_BY_ID_SQL = "SELECT * FROM orders WHERE id = ?";
     private static final String SELECT_ALL_ORDERS_SQL = "SELECT * FROM orders";
