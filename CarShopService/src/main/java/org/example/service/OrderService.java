@@ -14,6 +14,7 @@ import org.example.model.Client;
 import org.example.model.Order;
 import org.example.repository.CarRepository;
 import org.example.repository.OrderRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,12 +25,16 @@ import java.util.stream.Collectors;
  * Сервисный класс для управления заказами. Предоставляет методы для создания, получения,
  * обновления и отмены заказов, а также для поиска заказов по различным критериям.
  */
+@Service
 @AllArgsConstructor
 @Slf4j
 public class OrderService {
+
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final CarRepository carRepository;
+    private final OrderMapper orderMapper;
+    private final UserMapper userMapper;
 
     /**
      * Создание нового заказа.
@@ -48,7 +53,7 @@ public class OrderService {
             Car car = optionalCar.get();
 
             ClientDTO clientDTO = userService.getClientByUsername(orderDTO.getClientUsername());
-            Client client = UserMapper.INSTANCE.clientDTOToClient(clientDTO);
+            Client client = userMapper.clientDTOToClient(clientDTO);  // Используем инъекцию
 
             Order order = new Order(car, client);
             orderRepository.addOrder(order);
@@ -57,8 +62,8 @@ public class OrderService {
             carRepository.updateCar(car);
             userService.increaseOrderCount(client.getUsername());
 
-            return OrderMapper.INSTANCE.orderToOrderDTO(order);
-        } catch (Exception e) {  // Обрабатываем любые ошибки
+            return orderMapper.orderToOrderDTO(order);
+        } catch (Exception e) {
             log.error("Ошибка при создании заказа", e);
             throw new DatabaseException("Ошибка при создании заказа", e);
         }
@@ -74,7 +79,7 @@ public class OrderService {
         try {
             List<Order> orders = orderRepository.getAllOrders();
             return orders.stream()
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении всех заказов", e);
@@ -94,7 +99,7 @@ public class OrderService {
         try {
             Order order = orderRepository.getOrderById(id);
             return Optional.ofNullable(order)
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .orElseThrow(() -> new OrderNotFoundException("Заказ с ID " + id + " не найден"));
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении заказа с ID " + id, e);
@@ -147,7 +152,7 @@ public class OrderService {
         try {
             List<Order> orders = orderRepository.getOrdersByDateRange(startDateTime, endDateTime);
             return orders.stream()
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении заказов по диапазону дат", e);
@@ -166,7 +171,7 @@ public class OrderService {
         try {
             List<Order> orders = orderRepository.getOrdersByClient(clientUsername);
             return orders.stream()
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении заказов клиента", e);
@@ -185,7 +190,7 @@ public class OrderService {
         try {
             List<Order> orders = orderRepository.getOrdersByStatus(status);
             return orders.stream()
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении заказов по статусу", e);
@@ -204,7 +209,7 @@ public class OrderService {
         try {
             List<Order> orders = orderRepository.getOrdersByCar(carId);
             return orders.stream()
-                    .map(OrderMapper.INSTANCE::orderToOrderDTO)
+                    .map(orderMapper::orderToOrderDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {  // Обрабатываем любые ошибки
             log.error("Ошибка при получении заказов по автомобилю", e);

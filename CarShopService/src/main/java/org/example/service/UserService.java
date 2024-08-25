@@ -21,10 +21,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 public class UserService {
+
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public void registerUser(UserDTO userDTO) throws SQLException {
-        User user = UserMapper.INSTANCE.userDTOToUser(userDTO);
+        User user = userMapper.userDTOToUser(userDTO);
         if (userExists(user.getUsername())) {
             throw new UserAlreadyExistsException("Пользователь с таким именем уже существует");
         }
@@ -34,14 +36,14 @@ public class UserService {
     public UserDTO authenticate(String username, String password) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
-            return UserMapper.INSTANCE.userToUserDTO(user);
+            return userMapper.userToUserDTO(user);
         }
         return null;
     }
 
     public List<UserDTO> getAllUsers() throws SQLException {
         return userRepository.getAllUsers().stream()
-                .map(UserMapper.INSTANCE::userToUserDTO)
+                .map(userMapper::userToUserDTO)
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +51,7 @@ public class UserService {
         return userRepository.getAllUsers().stream()
                 .filter(Client.class::isInstance)
                 .map(Client.class::cast)
-                .map(UserMapper.INSTANCE::clientToClientDTO)
+                .map(userMapper::clientToClientDTO)
                 .collect(Collectors.toList());
     }
 
@@ -110,7 +112,7 @@ public class UserService {
     public ClientDTO getClientByUsername(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user instanceof Client) {
-            return UserMapper.INSTANCE.clientToClientDTO((Client) user);
+            return userMapper.clientToClientDTO((Client) user);
         }
         throw new ClientNotFoundException("Клиент с таким именем не найден");
     }

@@ -7,6 +7,7 @@ import org.example.mapper.CarMapper;
 import org.example.model.Car;
 import org.example.repository.CarRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class CarService {
 
     private final CarRepository carRepository;
+    private final CarMapper carMapper;
 
     /**
      * Добавление нового автомобиля.
@@ -27,9 +29,9 @@ public class CarService {
      * @return DTO добавленного автомобиля.
      */
     public CarDTO addCar(CarDTO carDTO) {
-        Car car = CarMapper.INSTANCE.carDTOToCar(carDTO);
+        Car car = carMapper.carDTOToCar(carDTO);
         Car savedCar = carRepository.addCar(car);
-        return CarMapper.INSTANCE.carToCarDTO(savedCar);
+        return carMapper.carToCarDTO(savedCar);
     }
 
     /**
@@ -40,7 +42,7 @@ public class CarService {
     public List<CarDTO> getAllAvailableCars() {
         List<Car> cars = carRepository.getAllAvailableCars();
         return cars.stream()
-                .map(CarMapper.INSTANCE::carToCarDTO)
+                .map(carMapper::carToCarDTO)
                 .collect(Collectors.toList());
     }
 
@@ -54,7 +56,7 @@ public class CarService {
     public CarDTO getCarById(int id) {
         Car car = carRepository.getCarById(id)
                 .orElseThrow(() -> new CarNotFoundException("Автомобиль с ID " + id + " не найден"));
-        return CarMapper.INSTANCE.carToCarDTO(car);
+        return carMapper.carToCarDTO(car);
     }
 
     /**
@@ -74,7 +76,7 @@ public class CarService {
      * @return true, если автомобиль успешно обновлен, иначе false.
      */
     public boolean updateCar(CarDTO carDTO) {
-        Car car = CarMapper.INSTANCE.carDTOToCar(carDTO);
+        Car car = carMapper.carDTOToCar(carDTO);
         return carRepository.updateCar(car);
     }
 
@@ -92,7 +94,7 @@ public class CarService {
     public List<CarDTO> searchCars(String make, String model, Integer year, Double minPrice, Double maxPrice, String condition) {
         List<Car> cars = carRepository.searchCars(make, model, year, minPrice, maxPrice, condition);
         return cars.stream()
-                .map(CarMapper.INSTANCE::carToCarDTO)
+                .map(carMapper::carToCarDTO)
                 .collect(Collectors.toList());
     }
 
@@ -109,7 +111,7 @@ public class CarService {
         }
         List<Car> cars = carRepository.getCarsByPriceRange(minPrice, maxPrice);
         return cars.stream()
-                .map(CarMapper.INSTANCE::carToCarDTO)
+                .map(carMapper::carToCarDTO)
                 .collect(Collectors.toList());
     }
 
@@ -126,7 +128,7 @@ public class CarService {
         }
         List<Car> cars = carRepository.getCarsByYearRange(minYear, maxYear);
         return cars.stream()
-                .map(CarMapper.INSTANCE::carToCarDTO)
+                .map(carMapper::carToCarDTO)
                 .collect(Collectors.toList());
     }
 }

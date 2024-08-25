@@ -1,67 +1,48 @@
 package org.example.repository;
 
 import org.example.logi.AuditLog;
-
-import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-/**
- * Реализация репозитория для работы с журналом аудита с использованием JDBC.
- */
+@Repository
 public class JdbcAuditLogRepository implements AuditLogRepository {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5433/mydatabase";
-    private static final String JDBC_USER = "user";
-    private static final String JDBC_PASSWORD = "password";
+    private final JdbcTemplate jdbcTemplate;
 
     private static final String INSERT_AUDIT_LOG_SQL = "INSERT INTO audit_log (timestamp, action_type, username, details) VALUES (?, ?, ?, ?)";
     private static final String SELECT_ALL_AUDIT_LOGS_SQL = "SELECT * FROM audit_log ORDER BY timestamp DESC";
 
-    /**
-     * Сохраняет запись журнала аудита в базе данных.
-     *
-     * @param auditLog Запись журнала аудита для сохранения.
-     */
-    @Override
-    public void save(AuditLog auditLog) {
-        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
-             PreparedStatement statement = connection.prepareStatement(INSERT_AUDIT_LOG_SQL)) {
-
-            statement.setObject(1, auditLog.getTimestamp());
-            statement.setString(2, auditLog.getActionType());
-            statement.setString(3, auditLog.getUsername());
-            statement.setString(4, auditLog.getDetails());
-
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    @Autowired
+    public JdbcAuditLogRepository(DataSource dataSource) {
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    /**
-     * Получает все записи журнала аудита из базы данных, отсортированные по времени в порядке убывания.
-     *
-     * @return Список записей журнала аудита.
-     */
+    @Override
+    public void save(AuditLog auditLog) {
+        jdbcTemplate.update(INSERT_AUDIT_LOG_SQL,
+                auditLog.getTimestamp(),
+                auditLog.getActionType(),
+                auditLog.getUsername(),
+                auditLog.getDetails());
+    }
+
     public List<AuditLog> getAllLogs() {
-        List<AuditLog> logs = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
-             PreparedStatement statement = connection.prepareStatement(SELECT_ALL_AUDIT_LOGS_SQL);
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                AuditLog log = new AuditLog();
-                log.setId(resultSet.getLong("id"));
-                log.setTimestamp(resultSet.getObject("timestamp", LocalDateTime.class));
-                log.setActionType(resultSet.getString("action_type"));
-                log.setUsername(resultSet.getString("username"));
-                log.setDetails(resultSet.getString("details"));
-                logs.add(log);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return logs;
+        return jdbcTemplate.query(SELECT_ALL_AUDIT_LOGS_SQL, this::mapRowToAuditLog);
+    }
+
+    private AuditLog mapRowToAuditLog(ResultSet rs, int rowNum) throws SQLException {
+        AuditLog log = new AuditLog();
+        log.setId(rs.getLong("id"));
+        log.setTimestamp(rs.getObject("timestamp", LocalDateTime.class));
+        log.setActionType(rs.getString("action_type"));
+        log.setUsername(rs.getString("username"));
+        log.setDetails(rs.getString("details"));
+        return log;
     }
 }

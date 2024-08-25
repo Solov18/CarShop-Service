@@ -3,6 +3,7 @@ package org.example.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ClientDTO;
 import org.example.exception.ClientNotFoundException;
 import org.example.exception.InvalidParameterException;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +20,7 @@ import java.util.Objects;
 @Api(value = "Client API", tags = {"Clients"})
 @RestController
 @RequestMapping("/api/clients")
+@Slf4j
 public class ClientController {
 
     private final UserService userService;
@@ -37,6 +40,9 @@ public class ClientController {
             @ApiParam(value = "Максимальное количество заказов") @RequestParam(value = "maxOrders", required = false) Integer maxOrders) {
 
         try {
+            log.info("Получение клиентов с параметрами: action={}, name={}, contactInfo={}, minOrders={}, maxOrders={}",
+                    action, name, contactInfo, minOrders, maxOrders);
+
             if (Objects.isNull(action)) {
                 List<ClientDTO> clientDTOs = userService.getAllClients();
                 return ResponseEntity.ok(clientDTOs);
@@ -44,46 +50,55 @@ public class ClientController {
                 switch (action) {
                     case "filterByName":
                         if (Objects.nonNull(name)) {
+                            log.info("Фильтрация клиентов по имени: {}", name);
                             List<ClientDTO> filteredClientsByName = userService.filterClientsByName(name);
                             return ResponseEntity.ok(filteredClientsByName);
                         } else {
+                            log.warn("Не указано имя для фильтрации");
                             throw new InvalidParameterException("Имя не указано");
                         }
                     case "filterByContactInfo":
                         if (Objects.nonNull(contactInfo)) {
+                            log.info("Фильтрация клиентов по контактной информации: {}", contactInfo);
                             List<ClientDTO> filteredClientsByContactInfo = userService.filterClientsByContactInfo(contactInfo);
                             return ResponseEntity.ok(filteredClientsByContactInfo);
                         } else {
+                            log.warn("Не указана контактная информация для фильтрации");
                             throw new InvalidParameterException("Контактная информация не указана");
                         }
                     case "sortByName":
+                        log.info("Сортировка клиентов по имени");
                         List<ClientDTO> sortedClientsByName = userService.sortClientsByName();
                         return ResponseEntity.ok(sortedClientsByName);
                     case "filterByOrders":
                         if (minOrders != null && maxOrders != null) {
+                            log.info("Фильтрация клиентов по количеству заказов: minOrders={}, maxOrders={}", minOrders, maxOrders);
                             List<ClientDTO> filteredClientsByOrders = userService.filterClientsByOrders(minOrders, maxOrders);
                             return ResponseEntity.ok(filteredClientsByOrders);
                         } else {
+                            log.warn("Некорректные параметры для фильтрации по количеству заказов");
                             throw new InvalidParameterException("Неверный формат чисел для заказов");
                         }
                     case "sortByOrders":
+                        log.info("Сортировка клиентов по количеству заказов");
                         List<ClientDTO> sortedClientsByOrders = userService.sortClientsByOrders();
                         return ResponseEntity.ok(sortedClientsByOrders);
                     default:
+                        log.warn("Неверное действие: {}", action);
                         throw new InvalidParameterException("Неверное действие");
                 }
             }
         } catch (ClientNotFoundException e) {
-            // Возвращаем пустой список с соответствующим статусом, так как клиент не найден
+            log.error("Клиенты не найдены: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
         } catch (InvalidParameterException e) {
-            // Возвращаем пустой список с соответствующим статусом, так как параметры некорректны
+            log.error("Некорректные параметры: {}", e.getMessage());
             return ResponseEntity.badRequest().body(List.of());
         } catch (SQLException e) {
-            // Возвращаем пустой список с ошибкой сервера
+            log.error("Ошибка работы с базой данных: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         } catch (Exception e) {
-            // Возвращаем пустой список с ошибкой сервера
+            log.error("Неизвестная ошибка: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }

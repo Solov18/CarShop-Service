@@ -12,32 +12,25 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = "spring", uses = { AdminMapper.class, ManagerMapper.class, ClientMapper.class })
 public interface UserMapper {
+
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    // Маппинг между User и UserDTO, поля role и password игнорируются
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "role", source = "role")
     UserDTO userToUserDTO(User user);
 
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "password", ignore = true)
     User userDTOToUser(UserDTO userDTO);
 
-    // Маппинг между Client и ClientDTO, поле orderCount игнорируется
-    @Mapping(target = "orderCount", ignore = true)
+    // Маппинг для конкретных типов
     ClientDTO clientToClientDTO(Client client);
 
-    @Mapping(target = "orderCount", ignore = true)
     Client clientDTOToClient(ClientDTO clientDTO);
 
-    // Маппинг между Manager и ManagerDTO
     ManagerDTO managerToManagerDTO(Manager manager);
 
     Manager managerDTOToManager(ManagerDTO managerDTO);
 
-    // Маппинг между Admin и AdminDTO
     AdminDTO adminToAdminDTO(Admin admin);
 
     Admin adminDTOToAdmin(AdminDTO adminDTO);
