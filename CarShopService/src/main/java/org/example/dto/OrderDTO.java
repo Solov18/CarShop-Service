@@ -21,6 +21,14 @@ public class OrderDTO {
     private String status;
     private LocalDateTime date;
 
+    public OrderDTO(int i, String s, String aNew, int i1) {
+
+    }
+
+    public OrderDTO() {
+
+    }
+
     public int getId() {
         return id;
     }

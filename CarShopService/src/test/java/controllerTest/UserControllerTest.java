@@ -1,229 +1,224 @@
-//package controllerTest;
-//
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.Mockito.*;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpServletResponse;
-//import org.example.controller.UserController;
-//import org.example.dto.AuthenticationDTO;
-//import org.example.dto.ClientDTO;
-//import org.example.dto.UserDTO;
-//import org.example.service.UserService;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.MockitoAnnotations;
-//import java.io.BufferedReader;
-//import java.io.StringReader;
-//import java.util.Collections;
-//import java.util.List;
-//
-//
-//public class UserControllerTest {
-//
-//    @Mock
-//    private UserService userService;
-//
-//    @InjectMocks
-//    private UserController userController;
-//
-//    private HttpServletRequest request;
-//    private HttpServletResponse response;
-//
-//    @BeforeEach
-//    public void setUp() {
-//        MockitoAnnotations.openMocks(this);
-//        request = mock(HttpServletRequest.class);
-//        response = mock(HttpServletResponse.class);
-//    }
-//
-//    @Test
-//    public void testDoGetAllUsers() throws Exception {
-//
-//        List<UserDTO> userDTOs = Collections.singletonList(new UserDTO());
-//        when(request.getParameter("action")).thenReturn(null);
-//        when(userService.getAllUsers()).thenReturn(userDTOs);
-//
-//
-//        userController.doGet(request, response);
-//
-//
-//        verify(response).setContentType("application/json");
-//        verify(userService).getAllUsers();
-//    }
-//
-//    @Test
-//    public void testDoGetAllClients() throws Exception {
-//
-//        List<ClientDTO> clientDTOs = Collections.singletonList(new ClientDTO());
-//        when(request.getParameter("action")).thenReturn("clients");
-//        when(userService.getAllClients()).thenReturn(clientDTOs);
-//
-//
-//        userController.doGet(request, response);
-//
-//
-//        verify(response).setContentType("application/json");
-//        verify(userService).getAllClients();
-//    }
-//
-//    @Test
-//    public void testDoGetClientByUsername() throws Exception {
-//
-//        ClientDTO clientDTO = new ClientDTO();
-//        when(request.getParameter("action")).thenReturn("client");
-//        when(request.getParameter("username")).thenReturn("testuser");
-//        when(userService.getClientByUsername("testuser")).thenReturn(clientDTO);
-//
-//
-//        userController.doGet(request, response);
-//
-//
-//        verify(response).setContentType("application/json");
-//        verify(userService).getClientByUsername("testuser");
-//    }
-//
-//    @Test
-//    public void testDoGetClientByUsernameNotFound() throws Exception {
-//
-//        when(request.getParameter("action")).thenReturn("client");
-//        when(request.getParameter("username")).thenReturn("testuser");
-//        when(userService.getClientByUsername("testuser")).thenThrow(new RuntimeException("Client not found"));
-//
-//
-//        userController.doGet(request, response);
-//
-//
-//        verify(response).sendError(HttpServletResponse.SC_NOT_FOUND, "Client not found");
-//    }
-//
-//    @Test
-//    public void testDoPostRegisterUser() throws Exception {
-//
-//        UserDTO userDTO = new UserDTO();
-//        when(request.getParameter("action")).thenReturn("register");
-//        when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"username\":\"testuser\",\"password\":\"password\"}")));
-//
-//
-//        userController.doPost(request, response);
-//
-//
-//        verify(userService).registerUser(any(UserDTO.class));
-//        verify(response).setStatus(HttpServletResponse.SC_CREATED);
-//    }
-//
-//    @Test
-//    public void testDoPostAuthenticate() throws Exception {
-//
-//        AuthenticationDTO authDTO = new AuthenticationDTO("testuser", "password");
-//        UserDTO userDTO = new UserDTO();
-//        when(request.getParameter("action")).thenReturn("authenticate");
-//        when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"username\":\"testuser\",\"password\":\"password\"}")));
-//        when(userService.authenticate("testuser", "password")).thenReturn(userDTO);
-//
-//
-//        userController.doPost(request, response);
-//
-//
-//        verify(response).setStatus(HttpServletResponse.SC_OK);
-//        verify(response).setContentType("application/json");
-//        verify(userService).authenticate("testuser", "password");
-//    }
-//
-//    @Test
-//    public void testDoPostAuthenticateUnauthorized() throws Exception {
-//
-//        when(request.getParameter("action")).thenReturn("authenticate");
-//        when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"username\":\"testuser\",\"password\":\"wrongpassword\"}")));
-//        when(userService.authenticate("testuser", "wrongpassword")).thenReturn(null);
-//
-//
-//        userController.doPost(request, response);
-//
-//
-//        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Неверное имя пользователя или пароль");
-//    }
-//
-//    @Test
-//    public void testDoPutIncreaseOrders() throws Exception {
-//
-//        when(request.getParameter("action")).thenReturn("increaseOrders");
-//        when(request.getParameter("username")).thenReturn("testuser");
-//
-//
-//        userController.doPut(request, response);
-//
-//
-//        verify(userService).increaseOrderCount("testuser");
-//        verify(response).setStatus(HttpServletResponse.SC_OK);
-//    }
-//
-//    @Test
-//    public void testDoPutIncreaseOrdersBadRequest() throws Exception {
-//
-//        when(request.getParameter("action")).thenReturn("increaseOrders");
-//        when(request.getParameter("username")).thenReturn(null);
-//
-//
-//        userController.doPut(request, response);
-//
-//
-//        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя пользователя не указано");
-//    }
-//
-//    @Test
-//    public void testDoPutFilterByName() throws Exception {
-//
-//        List<ClientDTO> filteredClients = Collections.singletonList(new ClientDTO());
-//        when(request.getParameter("action")).thenReturn("filterByName");
-//        when(request.getParameter("name")).thenReturn("John");
-//        when(userService.filterClientsByName("John")).thenReturn(filteredClients);
-//
-//
-//        userController.doPut(request, response);
-//
-//
-//        verify(response).setContentType("application/json");
-//        verify(userService).filterClientsByName("John");
-//    }
-//
-//    @Test
-//    public void testDoDeleteUser() throws Exception {
-//
-//        when(request.getParameter("username")).thenReturn("testuser");
-//        when(userService.userExists("testuser")).thenReturn(true);
-//
-//
-//        userController.doDelete(request, response);
-//
-//
-//        verify(userService).removeUser("testuser");
-//        verify(response).setStatus(HttpServletResponse.SC_NO_CONTENT);
-//    }
-//
-//    @Test
-//    public void testDoDeleteUserNotFound() throws Exception {
-//
-//        when(request.getParameter("username")).thenReturn("testuser");
-//        when(userService.userExists("testuser")).thenReturn(false);
-//
-//
-//        userController.doDelete(request, response);
-//
-//
-//        verify(response).sendError(HttpServletResponse.SC_NOT_FOUND, "Пользователь не найден");
-//    }
-//
-//    @Test
-//    public void testDoDeleteBadRequest() throws Exception {
-//
-//        when(request.getParameter("username")).thenReturn(null);
-//
-//
-//        userController.doDelete(request, response);
-//
-//
-//        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя пользователя не указано");
-//    }
-//}
+package controllerTest;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.controller.UserController;
+import org.example.dto.AuthenticationDTO;
+import org.example.dto.ClientDTO;
+import org.example.dto.UserDTO;
+import org.example.exception.ClientNotFoundException;
+import org.example.exception.UserAlreadyExistsException;
+import org.example.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+/**
+ * Тесты для контроллера пользователей {@link UserController}.
+ * Проверяют функциональность методов контроллера, включая обработку исключений.
+ */
+@SpringJUnitConfig
+public class UserControllerTest {
+
+    @InjectMocks
+    private UserController userController;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    /**
+     * Тестирование получения всех пользователей.
+     * Проверяет успешный сценарий, когда метод {@code getAllUsers()} возвращает список пользователей.
+     */
+    @Test
+    void testGetAllUsers_Success() throws SQLException {
+        List<UserDTO> userDTOs = new ArrayList<>();
+        userDTOs.add(new UserDTO("user1", "pass1"));
+        userDTOs.add(new UserDTO("user2", "pass2"));
+
+        when(userService.getAllUsers()).thenReturn(userDTOs);
+
+        ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(userDTOs, response.getBody());
+    }
+
+    /**
+     * Тестирование получения всех клиентов.
+     * Проверяет успешный сценарий, когда метод {@code getAllClients()} возвращает список клиентов.
+     */
+    @Test
+    void testGetAllClients_Success() throws SQLException {
+        List<ClientDTO> clientDTOs = new ArrayList<>();
+        clientDTOs.add(new ClientDTO("client1", 1));
+        clientDTOs.add(new ClientDTO("client2", 1));
+
+        when(userService.getAllClients()).thenReturn(clientDTOs);
+
+        ResponseEntity<List<ClientDTO>> response = userController.getAllClients();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(clientDTOs, response.getBody());
+    }
+
+    /**
+     * Тестирование получения клиента по имени пользователя.
+     * Проверяет успешный сценарий, когда клиент найден.
+     */
+    @Test
+    void testGetClientByUsername_Success() throws SQLException, ClientNotFoundException {
+        ClientDTO clientDTO = new ClientDTO("client1", 1);
+
+        when(userService.getClientByUsername(anyString())).thenReturn(clientDTO);
+
+        ResponseEntity<?> response = userController.getClientByUsername("client1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(clientDTO, response.getBody());
+    }
+
+    /**
+     * Тестирование получения клиента по имени пользователя, когда клиент не найден.
+     * Проверяет обработку исключения {@code ClientNotFoundException}.
+     */
+    @Test
+    void testGetClientByUsername_ClientNotFound() throws SQLException, ClientNotFoundException {
+        when(userService.getClientByUsername(anyString())).thenThrow(new ClientNotFoundException("Client not found"));
+
+        ResponseEntity<?> response = userController.getClientByUsername("nonexistent");
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Client not found", response.getBody());
+    }
+
+    /**
+     * Тестирование регистрации нового пользователя.
+     * Проверяет успешный сценарий регистрации пользователя.
+     */
+    @Test
+    void testRegisterUser_Success() throws SQLException, UserAlreadyExistsException {
+        AuthenticationDTO authenticationDTO = new AuthenticationDTO();
+
+        ResponseEntity<String> response = userController.registerUser(authenticationDTO);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("User registered", response.getBody());
+    }
+
+    /**
+     * Тестирование регистрации нового пользователя, когда пользователь уже существует.
+     * Проверяет обработку исключения {@code UserAlreadyExistsException}.
+     */
+    @Test
+    void testRegisterUser_UserAlreadyExists() throws SQLException, UserAlreadyExistsException {
+        AuthenticationDTO authenticationDTO = new AuthenticationDTO();
+        ResponseEntity<String> response = userController.registerUser(authenticationDTO);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("User already exists", response.getBody());
+    }
+
+    /**
+     * Тестирование аутентификации пользователя.
+     * Проверяет успешный сценарий, когда аутентификация проходит успешно.
+     */
+    @Test
+    void testAuthenticate_Success() throws SQLException {
+        AuthenticationDTO authDTO = new AuthenticationDTO();
+        UserDTO userDTO = new UserDTO("user1", "pass1");
+
+        when(userService.authenticate(anyString(), anyString())).thenReturn(userDTO);
+
+        ResponseEntity<?> response = userController.authenticate(authDTO);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(userDTO, response.getBody());
+    }
+
+    /**
+     * Тестирование аутентификации пользователя, когда учетные данные неверные.
+     * Проверяет обработку случая, когда аутентификация не удается.
+     */
+    @Test
+    void testAuthenticate_Unauthorized() throws SQLException {
+        AuthenticationDTO authDTO = new AuthenticationDTO();
+
+        when(userService.authenticate(anyString(), anyString())).thenReturn(null);
+
+        ResponseEntity<?> response = userController.authenticate(authDTO);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Неверное имя пользователя или пароль", response.getBody());
+    }
+
+    /**
+     * Тестирование увеличения количества заказов пользователя.
+     * Проверяет успешный сценарий увеличения количества заказов.
+     */
+    @Test
+    void testIncreaseOrders_Success() throws SQLException {
+        ResponseEntity<String> response = userController.increaseOrders("user1");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Количество заказов увеличено", response.getBody());
+    }
+
+    /**
+     * Тестирование удаления пользователя.
+     * Проверяет успешный сценарий удаления пользователя.
+     */
+    @Test
+    void testDeleteUser_Success() throws SQLException {
+        when(userService.userExists(anyString())).thenReturn(true);
+
+        ResponseEntity<String> response = userController.deleteUser("user1");
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    /**
+     * Тестирование удаления пользователя, когда пользователь не найден.
+     * Проверяет обработку случая, когда пользователь не существует.
+     */
+    @Test
+    void testDeleteUser_NotFound() throws SQLException {
+        when(userService.userExists(anyString())).thenReturn(false);
+
+        ResponseEntity<String> response = userController.deleteUser("nonexistent");
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Пользователь не найден", response.getBody());
+    }
+
+    /**
+     * Тестирование обработки SQL исключения при получении всех пользователей.
+     * Проверяет правильную обработку исключений при ошибке базы данных.
+     */
+    @Test
+    void testGetAllUsers_SqlException() throws SQLException {
+        when(userService.getAllUsers()).thenThrow(new SQLException("Database error"));
+
+        ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(null, response.getBody());
+    }
+}

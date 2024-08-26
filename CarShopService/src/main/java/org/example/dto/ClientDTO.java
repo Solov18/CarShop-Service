@@ -12,6 +12,10 @@ public class ClientDTO extends UserDTO {
     private String contactInfo;
     private int orderCount;
 
+    public ClientDTO(int id, String username, String contactInfo, int orderCount) {
+
+    }
+
     public String getContactInfo() {
         return contactInfo;
     }
