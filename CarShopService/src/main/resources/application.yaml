@@ -11,3 +11,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+  springfox:
+    documentation:
+      swagger:
+        v2:
+          path: /v2/api-docs
