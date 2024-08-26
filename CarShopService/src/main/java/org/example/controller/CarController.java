@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +26,12 @@ import java.util.Objects;
 public class CarController {
 
     private final CarService carService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public CarController(CarService carService) {
+    public CarController(CarService carService, ObjectMapper objectMapper) {
         this.carService = carService;
+        this.objectMapper = objectMapper;
     }
 
     /**

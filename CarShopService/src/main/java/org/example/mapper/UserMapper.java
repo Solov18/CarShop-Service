@@ -15,14 +15,10 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring", uses = { AdminMapper.class, ManagerMapper.class, ClientMapper.class })
 public interface UserMapper {
 
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-
-    @Mapping(target = "role", source = "role")
     UserDTO userToUserDTO(User user);
 
-    @Mapping(target = "role", source = "role")
-    User userDTOToUser(UserDTO userDTO);
+
 
 
     @Mapping(target = "role", ignore = true)

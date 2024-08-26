@@ -12,9 +12,10 @@ public interface AdminMapper {
     AdminDTO adminToAdminDTO(Admin admin);
     Admin adminDTOToAdmin(AdminDTO adminDTO);
 
-    @Mappings({
-            @Mapping(source = "username", target = "username"),
-            @Mapping(source = "password", target = "password")
-    })
+
+
+
+    @Mapping(source = "username", target = "username")
+    @Mapping(source = "password", target = "password")
     Admin authenticationDTOToAdmin(AuthenticationDTO authenticationDTO);
 }

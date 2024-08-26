@@ -14,10 +14,8 @@ public interface ClientMapper {
 
     Client clientDTOToClient(ClientDTO clientDTO);
 
-    @Mappings({
-            @Mapping(source = "username", target = "username"),
-            @Mapping(source = "password", target = "password")
 
-    })
+    @Mapping(source = "username", target = "username")
+    @Mapping(source = "password", target = "password")
     Client authenticationDTOToClient(AuthenticationDTO authenticationDTO);
 }

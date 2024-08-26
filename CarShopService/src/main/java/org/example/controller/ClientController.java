@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -29,10 +30,12 @@ import java.util.Objects;
 public class ClientController {
 
     private final UserService userService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ClientController(UserService userService) {
+    public ClientController(UserService userService, ObjectMapper objectMapper) {
         this.userService = userService;
+        this.objectMapper = objectMapper;
     }
 
     /**

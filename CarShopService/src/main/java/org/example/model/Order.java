@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class Order {
     private int id;
     private Car car;
@@ -24,6 +23,8 @@ public class Order {
         this.date = LocalDateTime.now();
     }
 
+    public Order() {
+    }
 
     public Order(int id, Car car, Client client, String status, LocalDateTime date) {
         this.id = id;
