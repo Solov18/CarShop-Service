@@ -1,249 +1,100 @@
 package org.example.controller;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ValidationException;
-import org.example.config.DatabaseConnectionManager;
-import org.example.repository.CarRepository;
-import org.example.repository.OrderRepository;
-import org.example.repository.UserRepository;
-import org.example.service.OrderService;
+
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.OrderDTO;
-import org.example.service.UserService;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import org.example.exception.DatabaseException;
+import org.example.exception.InvalidOrderDataException;
+import org.example.exception.OrderNotFoundException;
+import org.example.mapper.OrderMapper;
+import org.example.service.OrderService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 
-/**
- * Контроллер для управления CRUD операциями с заказами.
- * Обрабатывает HTTP-запросы на URL "/api/orders".
- */
-@WebServlet("/api/orders")
-public class OrderController extends HttpServlet {
+@RestController
+@RequestMapping("/api/orders")
+@Slf4j
+public class OrderController {
+
     private final OrderService orderService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final OrderMapper orderMapper;
 
-    /**
-     * Конструктор контроллера заказов.
-     * Инициализирует все необходимые сервисы и репозитории.
-     */
-    public OrderController() {
-        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-        CarRepository carRepository = new CarRepository(dbConnectionManager);
-        UserRepository userRepository = new UserRepository(dbConnectionManager);
-        OrderRepository orderRepository = new OrderRepository(carRepository, userRepository, dbConnectionManager);
-        UserService userService = new UserService(userRepository);
-        this.orderService = new OrderService(orderRepository, userService, carRepository);
+    public OrderController(OrderService orderService, OrderMapper orderMapper) {
+        this.orderService = orderService;
+        this.orderMapper = orderMapper;
     }
 
     /**
-     * Обрабатывает POST-запрос для создания нового заказа.
+     * Создает новый заказ.
      *
-     * @param req  запрос от клиента, содержащий данные заказа.
-     * @param resp ответ клиенту с созданным заказом или ошибкой.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
+     * @param orderDTO объект передачи данных заказа, содержащий информацию о заказе.
+     * @return ResponseEntity с созданным объектом заказа и HTTP-статусом 201 Created, если заказ успешно создан.
+     *         В случае ошибки данных возвращает HTTP-статус 400 Bad Request.
+     *         В случае ошибки базы данных возвращает HTTP-статус 500 Internal Server Error.
      */
-    @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
         try {
-            OrderDTO orderDTO = objectMapper.readValue(req.getReader(), OrderDTO.class);
-            OrderDTO createdOrder = orderService.createOrder(orderDTO);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getWriter(), createdOrder);
-        } catch (ValidationException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при создании заказа");
+
+            OrderDTO createdOrderDTO = orderService.createOrder(orderDTO);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrderDTO);
+        } catch (DatabaseException e) {
+            log.error("Ошибка при создании заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (InvalidOrderDataException e) {
+            log.error("Ошибка в данных заказа", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     /**
-     * Обрабатывает GET-запрос для получения списка заказов или определенного заказа.
+     * Получает информацию о заказе по его идентификатору.
      *
-     * @param req  запрос от клиента, содержащий параметры действия.
-     * @param resp ответ клиенту с информацией о заказе или списке заказов.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
+     * @param id идентификатор заказа.
+     * @return ResponseEntity с объектом заказа и HTTP-статусом 200 OK, если заказ найден.
+     *         В случае, если заказ не найден, возвращает HTTP-статус 404 Not Found.
+     *         В случае ошибки базы данных возвращает HTTP-статус 500 Internal Server Error.
      */
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable int id) {
         try {
-            if (Objects.isNull(action)) {
-                List<OrderDTO> orders = orderService.getAllOrders();
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), orders);
-            } else {
-                handleAction(action, req, resp);
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при обработке запроса");
+
+            OrderDTO orderDTO = orderService.getOrderById(id);
+
+
+            return ResponseEntity.ok(orderDTO);
+        } catch (OrderNotFoundException e) {
+            log.error("Заказ не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (DatabaseException e) {
+            log.error("Ошибка базы данных при получении заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    /**
-     * Обрабатывает действия, переданные через параметр "action" в GET-запросе.
-     *
-     * @param action тип действия.
-     * @param req запрос от клиента.
-     * @param resp ответ клиенту.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleAction(String action, HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        switch (action) {
-            case "byId":
-                handleGetById(req, resp);
-                break;
-            case "byDateRange":
-                handleGetByDateRange(req, resp);
-                break;
-            case "byClient":
-                handleGetByClient(req, resp);
-                break;
-            case "byStatus":
-                handleGetByStatus(req, resp);
-                break;
-            case "byCar":
-                handleGetByCar(req, resp);
-                break;
-            default:
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный параметр действия");
-        }
-    }
 
     /**
-     * Получает заказ по ID.
+     * Обновляет статус заказа по его идентификатору.
      *
-     * @param req запрос от клиента, содержащий параметр ID заказа.
-     * @param resp ответ клиенту с информацией о заказе.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
+     * @param id идентификатор заказа.
+     * @param status новый статус заказа.
+     * @return ResponseEntity с HTTP-статусом 204 No Content, если статус успешно обновлен.
+     *         В случае, если заказ не найден, возвращает HTTP-статус 404 Not Found.
+     *         В случае ошибки базы данных возвращает HTTP-статус 500 Internal Server Error.
      */
-    private void handleGetById(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        int id = Integer.parseInt(req.getParameter("id"));
-        OrderDTO order = orderService.getOrderById(id);
-        if (order != null) {
-            resp.setContentType("application/json");
-            objectMapper.writeValue(resp.getWriter(), order);
-        } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-        }
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов в определенном временном диапазоне.
-     *
-     * @param req  запрос от клиента, содержащий параметры startDateTime и endDateTime.
-     * @param resp ответ клиенту с заказами в указанный временной период в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByDateRange(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        LocalDateTime startDateTime = LocalDateTime.parse(req.getParameter("startDateTime"));
-        LocalDateTime endDateTime = LocalDateTime.parse(req.getParameter("endDateTime"));
-        List<OrderDTO> orders = orderService.getOrdersByDateRange(startDateTime, endDateTime);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов клиента по его имени пользователя.
-     *
-     * @param req  запрос от клиента, содержащий параметр clientUsername.
-     * @param resp ответ клиенту с заказами, связанными с указанным клиентом, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByClient(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        String clientUsername = req.getParameter("clientUsername");
-        List<OrderDTO> orders = orderService.getOrdersByClient(clientUsername);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов по их статусу.
-     *
-     * @param req  запрос от клиента, содержащий параметр status.
-     * @param resp ответ клиенту с заказами, имеющими указанный статус, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByStatus(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        String status = req.getParameter("status");
-        List<OrderDTO> orders = orderService.getOrdersByStatus(status);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает запросы на получение заказов по идентификатору автомобиля.
-     *
-     * @param req  запрос от клиента, содержащий параметр carId.
-     * @param resp ответ клиенту с заказами, связанными с указанным автомобилем, в формате JSON.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     */
-    private void handleGetByCar(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
-        int carId = Integer.parseInt(req.getParameter("carId"));
-        List<OrderDTO> orders = orderService.getOrdersByCar(carId);
-        resp.setContentType("application/json");
-        objectMapper.writeValue(resp.getWriter(), orders);
-    }
-
-    /**
-     * Обрабатывает PUT-запрос для обновления статуса заказа.
-     *
-     * @param req  запрос от клиента, содержащий параметры id заказа и новый статус.
-     * @param resp ответ клиенту с кодом состояния, подтверждающим успешное обновление или сообщение об ошибке.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateOrderStatus(@PathVariable int id, @RequestParam String status) {
         try {
-            int id = Integer.parseInt(req.getParameter("id"));
-            String status = req.getParameter("status");
             boolean updated = orderService.updateOrderStatus(id, status);
-            if (updated) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при обновлении статуса заказа");
-        }
-    }
-
-    /**
-     * Обрабатывает DELETE-запрос для отмены заказа.
-     *
-     * @param req  запрос от клиента, содержащий параметр id заказа.
-     * @param resp ответ клиенту с кодом состояния, подтверждающим успешную отмену или сообщение об ошибке.
-     * @throws ServletException если произошла ошибка сервлета.
-     * @throws IOException если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            int id = Integer.parseInt(req.getParameter("id"));
-            boolean canceled = orderService.cancelOrder(id);
-            if (canceled) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка при отмене заказа");
+            return updated ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (OrderNotFoundException e) {
+            log.error("Заказ не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (DatabaseException e) {
+            log.error("Ошибка при обновлении статуса заказа", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

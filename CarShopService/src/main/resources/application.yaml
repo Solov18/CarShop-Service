@@ -1,4 +1,19 @@
-database:
-  url: jdbc:postgresql://localhost:5433/mydatabase
-  username: user
-  password: password
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/mydatabase
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  springfox:
+    documentation:
+      swagger:
+        v2:
+          path: /v2/api-docs

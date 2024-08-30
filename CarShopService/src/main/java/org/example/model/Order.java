@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -23,7 +23,9 @@ public class Order {
         this.date = LocalDateTime.now();
     }
 
-    // Конструктор для чтения из базы данных
+    public Order() {
+    }
+
     public Order(int id, Car car, Client client, String status, LocalDateTime date) {
         this.id = id;
         this.car = car;

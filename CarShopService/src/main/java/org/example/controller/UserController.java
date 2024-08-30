@@ -1,234 +1,139 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.example.config.DatabaseConnectionManager;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
-import org.example.repository.UserRepository;
+import org.example.exception.ClientNotFoundException;
+import org.example.exception.UserAlreadyExistsException;
 import org.example.service.UserService;
-import java.io.IOException;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.sql.SQLException;
-import java.util.Objects;
+import java.util.List;
 
+@Api(value = "User API", tags = {"Users"})
+@RestController
+@RequestMapping("/api/users")
+@Slf4j
+public class UserController {
 
-/**
- * Сервлет для обработки HTTP-запросов, связанных с пользователями.
- * Обрабатывает различные действия, такие как регистрация, аутентификация, фильтрация и сортировка пользователей.
- */
-@WebServlet("/api/users")
-public class UserController extends HttpServlet {
-    private UserService userService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserService userService;
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Инициализирует UserService при создании сервлета.
-     *
-     * @throws ServletException если произошла ошибка при инициализации.
-     */
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager();
-        UserRepository userRepository = new UserRepository(dbConnectionManager);
-        this.userService = new UserService(userRepository);
+    @Autowired
+    public UserController(UserService userService, ObjectMapper objectMapper) {
+        this.userService = userService;
+        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Обрабатывает GET-запросы для получения списка пользователей или информации о клиентах.
-     *
-     * @param req  запрос от клиента с параметрами действия.
-     * @param resp ответ клиенту с информацией в формате JSON.
-     * @throws ServletException если произошла ошибка в процессе обработки запроса.
-     * @throws IOException      если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-
+    @ApiOperation(value = "Получить всех пользователей", notes = "Возвращает список всех пользователей")
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         try {
-            if (Objects.isNull(action)) {
-
-                List<UserDTO> userDTOs = userService.getAllUsers();
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), userDTOs);
-            } else if ("clients".equals(action)) {
-
-                List<ClientDTO> clientDTOs = userService.getAllClients();
-                resp.setContentType("application/json");
-                objectMapper.writeValue(resp.getWriter(), clientDTOs);
-            } else if ("client".equals(action)) {
-
-                String username = req.getParameter("username");
-                if (Objects.nonNull(username)) {
-                    try {
-                        ClientDTO clientDTO = userService.getClientByUsername(username);
-                        resp.setContentType("application/json");
-                        objectMapper.writeValue(resp.getWriter(), clientDTO);
-                    } catch (RuntimeException e) {
-                        resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-                    }
-                } else {
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя пользователя не указано");
-                }
-            } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверное действие");
-            }
+            List<UserDTO> userDTOs = userService.getAllUsers();
+            return ResponseEntity.ok(userDTOs);
         } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка получения данных");
+            log.error("Ошибка при получении всех пользователей", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    /**
-     * Обрабатывает POST-запросы для регистрации пользователей или аутентификации.
-     *
-     * @param req  запрос от клиента с параметрами действия.
-     * @param resp ответ клиенту с подтверждением регистрации или аутентификации.
-     * @throws ServletException если произошла ошибка в процессе обработки запроса.
-     * @throws IOException      если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-
+    @ApiOperation(value = "Получить всех клиентов", notes = "Возвращает список всех клиентов")
+    @GetMapping("/clients")
+    public ResponseEntity<List<ClientDTO>> getAllClients() {
         try {
-            if ("register".equals(action)) {
-
-                UserDTO userDTO = objectMapper.readValue(req.getReader(), UserDTO.class);
-                try {
-                    userService.registerUser(userDTO);
-                    resp.setStatus(HttpServletResponse.SC_CREATED);
-                } catch (RuntimeException e) {
-                    resp.sendError(HttpServletResponse.SC_CONFLICT, e.getMessage());
-                }
-            } else if ("authenticate".equals(action)) {
-
-                AuthenticationDTO authDTO = objectMapper.readValue(req.getReader(), AuthenticationDTO.class);
-                UserDTO userDTO = userService.authenticate(authDTO.getUsername(), authDTO.getPassword());
-                if (Objects.nonNull(userDTO)) {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    objectMapper.writeValue(resp.getWriter(), userDTO);
-                } else {
-                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Неверное имя пользователя или пароль");
-                }
-            } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверное действие");
-            }
+            List<ClientDTO> clientDTOs = userService.getAllClients();
+            return ResponseEntity.ok(clientDTOs);
         } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка обработки запроса");
+            log.error("Ошибка при получении всех клиентов", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    /**
-     * Обрабатывает PUT-запросы для увеличения количества заказов, фильтрации и сортировки клиентов.
-     *
-     * @param req  запрос от клиента с параметрами действия.
-     * @param resp ответ клиенту с результатами обработки.
-     * @throws ServletException если произошла ошибка в процессе обработки запроса.
-     * @throws IOException      если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-
+    @ApiOperation(value = "Получить клиента по имени пользователя", notes = "Возвращает данные клиента по его имени пользователя")
+    @GetMapping("/client")
+    public ResponseEntity<?> getClientByUsername(
+            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
         try {
-            if (Objects.isNull(action)) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверное действие");
-                return;
-            }
-
-            switch (action) {
-                case "increaseOrders":
-                    String username = req.getParameter("username");
-                    if (Objects.nonNull(username)) {
-                        userService.increaseOrderCount(username);
-                        resp.setStatus(HttpServletResponse.SC_OK);
-                    } else {
-                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя пользователя не указано");
-                    }
-                    break;
-
-                case "filterByName":
-                    String name = req.getParameter("name");
-                    if (Objects.nonNull(name)) {
-                        List<ClientDTO> filteredClients = userService.filterClientsByName(name);
-                        resp.setContentType("application/json");
-                        objectMapper.writeValue(resp.getWriter(), filteredClients);
-                    } else {
-                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя не указано");
-                    }
-                    break;
-
-                case "filterByContactInfo":
-                    String contactInfo = req.getParameter("contactInfo");
-                    if (Objects.nonNull(contactInfo)) {
-                        List<ClientDTO> filteredClients = userService.filterClientsByContactInfo(contactInfo);
-                        resp.setContentType("application/json");
-                        objectMapper.writeValue(resp.getWriter(), filteredClients);
-                    } else {
-                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Контактная информация не указана");
-                    }
-                    break;
-
-                case "sortByName":
-                    List<ClientDTO> sortedClients = userService.sortClientsByName();
-                    resp.setContentType("application/json");
-                    objectMapper.writeValue(resp.getWriter(), sortedClients);
-                    break;
-
-                case "filterByOrders":
-                    int minOrders = Integer.parseInt(req.getParameter("minOrders"));
-                    int maxOrders = Integer.parseInt(req.getParameter("maxOrders"));
-                    List<ClientDTO> filteredClientsByOrders = userService.filterClientsByOrders(minOrders, maxOrders);
-                    resp.setContentType("application/json");
-                    objectMapper.writeValue(resp.getWriter(), filteredClientsByOrders);
-                    break;
-
-                case "sortByOrders":
-                    List<ClientDTO> sortedClientsByOrders = userService.sortClientsByOrders();
-                    resp.setContentType("application/json");
-                    objectMapper.writeValue(resp.getWriter(), sortedClientsByOrders);
-                    break;
-
-                default:
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверное действие");
-                    break;
-            }
-        } catch (SQLException | NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка обработки запроса");
+            ClientDTO clientDTO = userService.getClientByUsername(username);
+            return ResponseEntity.ok(clientDTO);
+        } catch (ClientNotFoundException e) {
+            log.error("Клиент не найден", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SQLException e) {
+            log.error("Ошибка при получении клиента по имени пользователя", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при получении клиента");
         }
     }
 
-    /**
-     * Обрабатывает DELETE-запросы для удаления пользователя по имени пользователя.
-     *
-     * @param req  запрос от клиента с параметром username.
-     * @param resp ответ клиенту с результатом операции удаления.
-     * @throws ServletException если произошла ошибка в процессе обработки запроса.
-     * @throws IOException      если произошла ошибка ввода/вывода.
-     */
-    @Override
-    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @ApiOperation(value = "Регистрация пользователя", notes = "Регистрация нового пользователя в системе")
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(
+            @ApiParam(value = "Данные нового пользователя", required = true) @RequestBody AuthenticationDTO authenticationDTO) {
         try {
-            String username = req.getParameter("username");
-            if (Objects.nonNull(username)) {
-                if (userService.userExists(username)) {
-                    userService.removeUser(username);
-                    resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                } else {
-                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Пользователь не найден");
-                }
+            userService.registerUser(authenticationDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Пользователь зарегистрирован");
+        } catch (UserAlreadyExistsException e) {
+            log.error("Ошибка при регистрации пользователя", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (SQLException e) {
+            log.error("Ошибка при регистрации пользователя", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка регистрации пользователя");
+        }
+    }
+
+    @ApiOperation(value = "Аутентификация пользователя", notes = "Проверка учетных данных пользователя для аутентификации")
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> authenticate(
+            @ApiParam(value = "Данные для аутентификации", required = true) @RequestBody AuthenticationDTO authDTO) {
+        try {
+            UserDTO userDTO = userService.authenticate(authDTO.getUsername(), authDTO.getPassword());
+            if (userDTO != null) {
+                return ResponseEntity.ok(userDTO);
             } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя пользователя не указано");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверное имя пользователя или пароль");
             }
         } catch (SQLException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка удаления пользователя");
+            log.error("Ошибка при аутентификации", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка аутентификации");
+        }
+    }
+
+    @ApiOperation(value = "Увеличение количества заказов пользователя", notes = "Увеличивает количество заказов пользователя по его имени пользователя")
+    @PutMapping("/increaseOrders")
+    public ResponseEntity<String> increaseOrders(
+            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
+        try {
+            userService.increaseOrderCount(username);
+            return ResponseEntity.ok("Количество заказов увеличено");
+        } catch (SQLException e) {
+            log.error("Ошибка при увеличении количества заказов", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка обновления количества заказов");
+        }
+    }
+
+    @ApiOperation(value = "Удаление пользователя", notes = "Удаляет пользователя по его имени пользователя")
+    @DeleteMapping
+    public ResponseEntity<String> deleteUser(
+            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
+        try {
+            if (userService.userExists(username)) {
+                userService.removeUser(username);
+                return ResponseEntity.noContent().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Пользователь не найден");
+            }
+        } catch (SQLException e) {
+            log.error("Ошибка при удалении пользователя", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка удаления пользователя");
         }
     }
 }

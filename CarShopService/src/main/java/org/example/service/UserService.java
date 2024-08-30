@@ -1,106 +1,138 @@
 package org.example.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
+import org.example.exception.ClientNotFoundException;
+import org.example.exception.UserAlreadyExistsException;
+import org.example.mapper.AdminMapper;
+import org.example.mapper.ClientMapper;
+import org.example.mapper.ManagerMapper;
 import org.example.mapper.UserMapper;
 import org.example.model.Client;
 import org.example.model.User;
 import org.example.repository.UserRepository;
+import org.springframework.stereotype.Service;
+
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Сервисный класс для управления пользователями. Предоставляет методы для регистрации,
- * аутентификации, фильтрации и сортировки пользователей и клиентов.
+ * Сервис для управления пользователями и клиентами.
+ *
+ * Этот сервис предоставляет методы для регистрации пользователей, аутентификации, получения списка пользователей,
+ * фильтрации и сортировки клиентов, а также для увеличения количества заказов и удаления пользователей.
+ *
  */
+@Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
-    private UserRepository userRepository;
 
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final AdminMapper adminMapper;
+    private final ClientMapper clientMapper;
+    private final ManagerMapper managerMapper;
 
     /**
      * Регистрация нового пользователя.
      *
-     * @param userDTO объект DTO пользователя, который нужно зарегистрировать.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
-     * @throws RuntimeException если пользователь с таким именем уже существует.
+     * Преобразует данные аутентификации в объект {@link User}. Если пользователь с таким именем уже существует,
+     * генерируется исключение {@link UserAlreadyExistsException}. Иначе, новый пользователь сохраняется в репозитории.
+     *
+     *
+     * @param authenticationDTO данные для аутентификации пользователя.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
+     * @throws UserAlreadyExistsException если пользователь с таким именем уже существует.
      */
-    public void registerUser(UserDTO userDTO) throws SQLException {
-        User user = UserMapper.INSTANCE.userDTOToUser(userDTO);
+    public void registerUser(AuthenticationDTO authenticationDTO) throws SQLException {
+        User user = convertToUser(authenticationDTO);
         if (userExists(user.getUsername())) {
-            throw new RuntimeException("Пользователь с таким именем уже существует");
+            throw new UserAlreadyExistsException("Пользователь с таким именем уже существует");
         }
         userRepository.addUser(user);
     }
 
-
     /**
-     * Аутентификация пользователя по имени пользователя и паролю.
+     * Аутентификация пользователя по имени и паролю.
+     *
+     * Проверяет, существует ли пользователь с указанным именем и совпадает ли пароль. Если проверка успешна,
+     * возвращает объект {@link UserDTO}; в противном случае возвращает {@code null}.
+     *
      *
      * @param username имя пользователя.
      * @param password пароль пользователя.
-     * @return объект DTO пользователя, если аутентификация успешна, иначе null.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
+     * @return объект {@link UserDTO} при успешной аутентификации, {@code null} в противном случае.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public UserDTO authenticate(String username, String password) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
-            // Преобразование сущности в DTO
-            return UserMapper.INSTANCE.userToUserDTO(user);
+            return userMapper.userToUserDTO(user);
         }
         return null;
     }
 
-
     /**
-     * Получение всех пользователей.
+     * Получение списка всех пользователей.
      *
-     * @return список DTO всех пользователей.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
+     * Получает список всех пользователей из репозитория и преобразует их в объекты {@link UserDTO}.
+     *
+     *
+     * @return список {@link UserDTO} всех пользователей.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<UserDTO> getAllUsers() throws SQLException {
         return userRepository.getAllUsers().stream()
-                .map(UserMapper.INSTANCE::userToUserDTO)
+                .map(userMapper::userToUserDTO)
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Получение всех клиентов.
+     * Получение списка всех клиентов.
      *
-     * @return список DTO всех клиентов.
-     * @throws SQLException если произошла ошибка при работе с базой данных.
+     * Фильтрует пользователей по типу {@link Client} и преобразует их в объекты {@link ClientDTO}.
+     *
+     *
+     * @return список {@link ClientDTO} всех клиентов.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> getAllClients() throws SQLException {
         return userRepository.getAllUsers().stream()
-                .filter(user -> user instanceof Client)
-                .map(user -> (Client) user)
-                .map(UserMapper.INSTANCE::clientToClientDTO)
+                .filter(Client.class::isInstance)
+                .map(Client.class::cast)
+                .map(clientMapper::clientToClientDTO)
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Проверяет, существует ли пользователь с заданным именем.
+     * Проверка существования пользователя.
      *
-     * @param username Имя пользователя, которого нужно проверить.
-     * @return {@code true}, если пользователь существует, {@code false} в противном случае.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Проверяет, существует ли пользователь с указанным именем в репозитории.
+     *
+     *
+     * @param username имя пользователя.
+     * @return {@code true}, если пользователь существует; {@code false} в противном случае.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public boolean userExists(String username) throws SQLException {
         return userRepository.userExists(username);
     }
 
-
     /**
-     * Фильтрует список клиентов по имени. Возвращает список клиентов, чье имя содержит заданную подстроку.
+     * Фильтрация клиентов по имени.
      *
-     * @param name Подстрока для фильтрации по имени клиента.
-     * @return Список клиентов, чье имя содержит заданную подстроку.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Возвращает список клиентов, у которых имя содержит указанную подстроку.
+     *
+     *
+     * @param name подстрока для фильтрации имени клиента.
+     * @return список {@link ClientDTO} клиентов, удовлетворяющих условию.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> filterClientsByName(String name) throws SQLException {
         return getAllClients().stream()
@@ -108,13 +140,15 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Фильтрует список клиентов по контактной информации. Возвращает список клиентов, чья контактная информация содержит заданную подстроку.
+     * Фильтрация клиентов по контактной информации.
      *
-     * @param contactInfo Подстрока для фильтрации по контактной информации клиента.
-     * @return Список клиентов, чья контактная информация содержит заданную подстроку.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Возвращает список клиентов, у которых контактная информация содержит указанную подстроку.
+     *
+     *
+     * @param contactInfo подстрока для фильтрации контактной информации клиента.
+     * @return список {@link ClientDTO} клиентов, удовлетворяющих условию.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> filterClientsByContactInfo(String contactInfo) throws SQLException {
         return getAllClients().stream()
@@ -122,12 +156,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Сортирует список клиентов по имени в алфавитном порядке.
+     * Сортировка клиентов по имени.
      *
-     * @return Список клиентов, отсортированный по имени.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Возвращает список клиентов, отсортированный по имени в алфавитном порядке.
+     *
+     *
+     * @return отсортированный список {@link ClientDTO} клиентов.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> sortClientsByName() throws SQLException {
         return getAllClients().stream()
@@ -135,14 +171,16 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Фильтрует список клиентов по количеству заказов. Возвращает список клиентов, количество заказов которых находится в заданном диапазоне.
+     * Фильтрация клиентов по количеству заказов.
      *
-     * @param minOrders Минимальное количество заказов.
-     * @param maxOrders Максимальное количество заказов.
-     * @return Список клиентов, количество заказов которых находится в заданном диапазоне.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Возвращает список клиентов, у которых количество заказов находится в указанном диапазоне.
+     *
+     *
+     * @param minOrders минимальное количество заказов.
+     * @param maxOrders максимальное количество заказов.
+     * @return список {@link ClientDTO} клиентов, удовлетворяющих условию.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> filterClientsByOrders(int minOrders, int maxOrders) throws SQLException {
         return getAllClients().stream()
@@ -150,13 +188,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-
-
     /**
-     * Сортирует список клиентов по количеству заказов в порядке возрастания.
+     * Сортировка клиентов по количеству заказов.
      *
-     * @return Список клиентов, отсортированный по количеству заказов.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * Возвращает список клиентов, отсортированный по количеству заказов в порядке возрастания.
+     *
+     *
+     * @return отсортированный список {@link ClientDTO} клиентов.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public List<ClientDTO> sortClientsByOrders() throws SQLException {
         return getAllClients().stream()
@@ -166,10 +205,14 @@ public class UserService {
 
 
     /**
-     * Увеличивает количество заказов для клиента с заданным именем.
+     * Увеличение количества заказов клиента.
+     * <p>
+     * Увеличивает количество заказов клиента с указанным именем. Если пользователь не является клиентом,
+     * генерируется предупреждающее сообщение в лог.
+     * <p>
      *
-     * @param username Имя клиента, для которого нужно увеличить количество заказов.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * @param username имя пользователя.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public void increaseOrderCount(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
@@ -178,40 +221,67 @@ public class UserService {
             client.increaseOrderCount();
             userRepository.addUser(client);
         } else {
-            System.out.println("Клиент с именем " + username + " не найден.");
+            log.warn("Клиент с именем {} не найден.", username);
         }
     }
 
-
     /**
-     * Удаляет пользователя с заданным именем.
+     * Удаление пользователя.
+     * <p>
+     * Удаляет пользователя с указанным именем. Если пользователь не найден, генерируется предупреждающее сообщение в лог.
+     * <p>
      *
-     * @param username Имя пользователя, которого нужно удалить.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
+     * @param username имя пользователя.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
      */
     public void removeUser(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user != null) {
             userRepository.removeUser(user);
         } else {
-            System.out.println("Пользователь с именем " + username + " не найден.");
+            log.warn("Пользователь с именем {} не найден.", username);
         }
     }
 
     /**
-     * Возвращает клиента в виде {@link ClientDTO} по заданному имени.
+     * Получение клиента по имени пользователя.
+     * <p>
+     * Возвращает клиента с указанным именем пользователя. Если клиент не найден, генерируется исключение {@link ClientNotFoundException}.
+     * </p>
      *
-     * @param username Имя клиента, которого нужно найти.
-     * @return {@link ClientDTO} клиента с заданным именем.
-     * @throws SQLException Если возникает ошибка при работе с базой данных.
-     * @throws RuntimeException Если клиент с таким именем не найден.
+     * @param username имя пользователя клиента.
+     * @return объект {@link ClientDTO} клиента.
+     * @throws SQLException если возникает ошибка при работе с базой данных.
+     * @throws ClientNotFoundException если клиент с таким именем не найден.
      */
     public ClientDTO getClientByUsername(String username) throws SQLException {
         User user = userRepository.getUserByUsername(username);
         if (user instanceof Client) {
-            return UserMapper.INSTANCE.clientToClientDTO((Client) user);
+            return clientMapper.clientToClientDTO((Client) user);
         }
-        throw new RuntimeException("Клиент с таким именем не найден");
+        throw new ClientNotFoundException("Клиент с таким именем не найден");
+    }
+
+    /**
+     * Преобразование данных аутентификации в объект {@link User}.
+     * <p>
+     * Преобразует объект {@link AuthenticationDTO} в соответствующий объект {@link User} в зависимости от типа пользователя.
+     * </p>
+     *
+     * @param authenticationDTO данные аутентификации.
+     * @return объект {@link User}.
+     * @throws IllegalArgumentException если неизвестный тип пользователя.
+     */
+    private User convertToUser(AuthenticationDTO authenticationDTO) {
+        switch (authenticationDTO.getUserType()) {
+            case "admin":
+                return adminMapper.authenticationDTOToAdmin(authenticationDTO);
+            case "client":
+                return clientMapper.authenticationDTOToClient(authenticationDTO);
+            case "manager":
+                return managerMapper.authenticationDTOToManager(authenticationDTO);
+            default:
+                throw new IllegalArgumentException("Unknown user type: " + authenticationDTO.getUserType());
+        }
     }
 }
-

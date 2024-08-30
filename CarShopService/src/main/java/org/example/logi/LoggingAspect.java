@@ -1,21 +1,17 @@
-package org.example.aspect;
+package org.example.logi;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.After;
-import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-
-
-
-/**
- * Аспект для логирования выполнения методов в контроллерах.
- * Содержит методы для логирования перед, после и во время выполнения методов.
- */
+@Component
 @Aspect
 public class LoggingAspect {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
 
     /**
      * Логирует начало выполнения метода в любом классе пакета controller.
@@ -24,7 +20,7 @@ public class LoggingAspect {
      */
     @Before("execution(* org.example.controller..*(..))")
     public void logBefore(JoinPoint joinPoint) {
-        System.out.println("Запуск метода:  " + joinPoint.getSignature().getName());
+        logger.info("Запуск метода: {}", joinPoint.getSignature().getName());
     }
 
     /**
@@ -34,7 +30,7 @@ public class LoggingAspect {
      */
     @After("execution(* org.example.controller..*(..))")
     public void logAfter(JoinPoint joinPoint) {
-        System.out.println("Завершился метод:  " + joinPoint.getSignature().getName());
+        logger.info("Завершился метод: {}", joinPoint.getSignature().getName());
     }
 
     /**
@@ -47,9 +43,9 @@ public class LoggingAspect {
     @Around("execution(* org.example.controller..*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
-        Object proceed = joinPoint.proceed();
+        Object result = joinPoint.proceed();
         long elapsedTime = System.currentTimeMillis() - start;
-        System.out.println(joinPoint.getSignature() + " Выполненный в " + elapsedTime + "мс");
-        return proceed;
+        logger.info("{} Выполненный в {}мс", joinPoint.getSignature(), elapsedTime);
+        return result;
     }
 }

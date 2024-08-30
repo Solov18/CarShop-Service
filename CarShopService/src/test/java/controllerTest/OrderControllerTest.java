@@ -1,27 +1,24 @@
 package controllerTest;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ValidationException;
 import org.example.controller.OrderController;
 import org.example.dto.OrderDTO;
+import org.example.exception.DatabaseException;
+import org.example.exception.InvalidOrderDataException;
+import org.example.exception.OrderNotFoundException;
 import org.example.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import java.io.BufferedReader;
-import java.io.StringReader;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-public class OrderControllerTest {
+class OrderControllerTest {
 
     @Mock
     private OrderService orderService;
@@ -29,158 +26,163 @@ public class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
 
-    private HttpServletRequest request;
-    private HttpServletResponse response;
-
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        request = mock(HttpServletRequest.class);
-        response = mock(HttpServletResponse.class);
     }
 
+    /**
+     * Тест для успешного создания заказа.
+     * Ожидается, что контроллер вернет статус 201 Created и созданный объект заказа.
+     */
     @Test
-    public void testDoPostSuccess() throws Exception {
-
-        OrderDTO orderDTO = new OrderDTO();
-        when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"orderDetails\":\"details\"}")));
+    void testCreateOrder_Success() throws Exception {
+        // Мокируем создание заказа
+        OrderDTO orderDTO = new OrderDTO(1, "Item 1", "New", 100);
         when(orderService.createOrder(any(OrderDTO.class))).thenReturn(orderDTO);
 
+        // Выполняем запрос создания заказа
+        ResponseEntity<OrderDTO> response = orderController.createOrder(orderDTO);
 
-        orderController.doPost(request, response);
-
-
-        verify(response).setStatus(HttpServletResponse.SC_CREATED);
-        verify(orderService).createOrder(any(OrderDTO.class));
+        // Проверяем ответ
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(orderDTO, response.getBody());
     }
 
+    /**
+     * Тест для обработки ошибки базы данных при создании заказа.
+     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
+     */
     @Test
-    public void testDoPostValidationException() throws Exception {
+    void testCreateOrder_DatabaseError() throws Exception {
+        // Мокируем выброс DatabaseException
+        when(orderService.createOrder(any(OrderDTO.class))).thenThrow(new Exception());
 
-        when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"orderDetails\":\"details\"}")));
-        doThrow(new ValidationException("Invalid data")).when(orderService).createOrder(any(OrderDTO.class));
+        // Выполняем запрос создания заказа
+        ResponseEntity<OrderDTO> response = orderController.createOrder(new OrderDTO());
 
-
-        orderController.doPost(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid data");
+        // Проверяем ответ
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для обработки ошибки данных при создании заказа.
+     * Ожидается, что контроллер вернет статус 400 Bad Request.
+     */
     @Test
-    public void testDoGetAllOrders() throws Exception {
+    void testCreateOrder_InvalidDataError() throws Exception {
+        // Мокируем выброс InvalidOrderDataException
+        when(orderService.createOrder(any(OrderDTO.class))).thenThrow(new InvalidOrderDataException("Invalid order data"));
 
-        List<OrderDTO> orders = Collections.singletonList(new OrderDTO());
-        when(request.getParameter("action")).thenReturn(null);
-        when(orderService.getAllOrders()).thenReturn(orders);
+        // Выполняем запрос создания заказа
+        ResponseEntity<OrderDTO> response = orderController.createOrder(new OrderDTO());
 
-
-        orderController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(orderService).getAllOrders();
+        // Проверяем ответ
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для успешного получения заказа по идентификатору.
+     * Ожидается, что контроллер вернет статус 200 OK и объект заказа.
+     */
     @Test
-    public void testDoGetOrderById() throws Exception {
-
-        OrderDTO orderDTO = new OrderDTO();
-        when(request.getParameter("action")).thenReturn("byId");
-        when(request.getParameter("id")).thenReturn("1");
+    void testGetOrderById_Success() throws Exception {
+        // Мокируем получение заказа
+        OrderDTO orderDTO = new OrderDTO(1, "Item 1", "New", 100);
         when(orderService.getOrderById(1)).thenReturn(orderDTO);
 
+        // Выполняем запрос получения заказа
+        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
 
-        orderController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(orderService).getOrderById(1);
+        // Проверяем ответ
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(orderDTO, response.getBody());
     }
 
+    /**
+     * Тест для обработки случая, когда заказ не найден.
+     * Ожидается, что контроллер вернет статус 404 Not Found.
+     */
     @Test
-    public void testDoGetOrderByIdNotFound() throws Exception {
+    void testGetOrderById_NotFound() throws Exception {
+        // Мокируем выброс OrderNotFoundException
+        when(orderService.getOrderById(1)).thenThrow(new OrderNotFoundException("Order not found"));
 
-        when(request.getParameter("action")).thenReturn("byId");
-        when(request.getParameter("id")).thenReturn("1");
-        when(orderService.getOrderById(1)).thenReturn(null);
+        // Выполняем запрос получения заказа
+        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
 
-
-        orderController.doGet(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
+        // Проверяем ответ
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для обработки ошибки базы данных при получении заказа.
+     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
+     */
     @Test
-    public void testDoPutSuccess() throws Exception {
+    void testGetOrderById_DatabaseError() throws Exception {
+        // Мокируем выброс DatabaseException
+        when(orderService.getOrderById(1)).thenThrow(new Exception("Database error"));
 
-        when(request.getParameter("id")).thenReturn("1");
-        when(request.getParameter("status")).thenReturn("shipped");
-        when(orderService.updateOrderStatus(1, "shipped")).thenReturn(true);
+        // Выполняем запрос получения заказа
+        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
 
-
-        orderController.doPut(request, response);
-
-
-        verify(response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+        // Проверяем ответ
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для успешного обновления статуса заказа.
+     * Ожидается, что контроллер вернет статус 204 No Content.
+     */
     @Test
-    public void testDoPutOrderNotFound() throws Exception {
+    void testUpdateOrderStatus_Success() throws Exception {
+        // Мокируем успешное обновление
+        when(orderService.updateOrderStatus(1, "Shipped")).thenReturn(true);
 
-        when(request.getParameter("id")).thenReturn("1");
-        when(request.getParameter("status")).thenReturn("shipped");
-        when(orderService.updateOrderStatus(1, "shipped")).thenReturn(false);
+        // Выполняем запрос обновления статуса заказа
+        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
 
-
-        orderController.doPut(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
+        // Проверяем ответ
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для обработки случая, когда заказ не найден при обновлении статуса.
+     * Ожидается, что контроллер вернет статус 404 Not Found.
+     */
     @Test
-    public void testDoDeleteSuccess() throws Exception {
+    void testUpdateOrderStatus_NotFound() throws Exception {
+        // Мокируем выброс OrderNotFoundException
+        when(orderService.updateOrderStatus(1, "Shipped")).thenThrow(new OrderNotFoundException("Order not found"));
 
-        when(request.getParameter("id")).thenReturn("1");
-        when(orderService.cancelOrder(1)).thenReturn(true);
+        // Выполняем запрос обновления статуса заказа
+        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
 
-
-        orderController.doDelete(request, response);
-
-
-        verify(response).setStatus(HttpServletResponse.SC_NO_CONTENT);
+        // Проверяем ответ
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
+    /**
+     * Тест для обработки ошибки базы данных при обновлении статуса заказа.
+     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
+     */
     @Test
-    public void testDoDeleteOrderNotFound() throws Exception {
+    void testUpdateOrderStatus_DatabaseError() throws Exception {
+        // Мокируем выброс DatabaseException
+        when(orderService.updateOrderStatus(1, "Shipped")).thenThrow(new Exception("Database error"));
 
-        when(request.getParameter("id")).thenReturn("1");
-        when(orderService.cancelOrder(1)).thenReturn(false);
+        // Выполняем запрос обновления статуса заказа
+        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
 
-
-        orderController.doDelete(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_NOT_FOUND, "Заказ не найден");
-    }
-
-    @Test
-    public void testDoGetOrdersByDateRange() throws Exception {
-
-        List<OrderDTO> orders = Collections.singletonList(new OrderDTO());
-        when(request.getParameter("action")).thenReturn("byDateRange");
-        when(request.getParameter("startDateTime")).thenReturn("2024-01-01T00:00:00");
-        when(request.getParameter("endDateTime")).thenReturn("2024-01-31T23:59:59");
-        when(orderService.getOrdersByDateRange(LocalDateTime.parse("2024-01-01T00:00:00"), LocalDateTime.parse("2024-01-31T23:59:59")))
-                .thenReturn(orders);
-
-
-        orderController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(orderService).getOrdersByDateRange(LocalDateTime.parse("2024-01-01T00:00:00"), LocalDateTime.parse("2024-01-31T23:59:59"));
+        // Проверяем ответ
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNull(response.getBody());
     }
 }

@@ -1,180 +1,155 @@
 package controllerTest;
 
-
-import static org.mockito.Mockito.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.example.controller.ClientController;
 import org.example.dto.ClientDTO;
+import org.example.exception.ClientNotFoundException;
+import org.example.exception.InvalidParameterException;
 import org.example.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collections;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-
-public class ClientControllerTest {
+class ClientControllerTest {
 
     @Mock
     private UserService userService;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private ClientController clientController;
 
-    private HttpServletRequest request;
-    private HttpServletResponse response;
-    private PrintWriter writer;
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @BeforeEach
-    public void setUp() throws IOException {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        request = mock(HttpServletRequest.class);
-        response = mock(HttpServletResponse.class);
-        writer = mock(PrintWriter.class);
-        when(response.getWriter()).thenReturn(writer);
     }
 
+    /**
+     * Тест для проверки получения всех клиентов без фильтрации.
+     */
     @Test
-    public void testDoGetAllClients() throws Exception {
-        List<ClientDTO> clientDTOs = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn(null);
-        when(userService.getAllClients()).thenReturn(clientDTOs);
+    void testGetAllClients() throws Exception {
+        // Данные для теста
+        List<ClientDTO> clients = Arrays.asList(
+                new ClientDTO(1, "John" , "john@example.com", 5 ),
+                new ClientDTO(2, "Jane", "jane@example.com", 10)
+        );
 
+        // Мокируем поведение сервиса
+        when(userService.getAllClients()).thenReturn(clients);
 
-        clientController.doGet(request, response);
+        // Выполняем запрос без действия
+        ResponseEntity<List<ClientDTO>> response = clientController.getClients(null, null, null, null, null);
 
-
-        verify(response).setContentType("application/json");
-
-
-        verify(objectMapper).writeValue(writer, clientDTOs);
+        // Проверяем ответ
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(clients, response.getBody());
     }
 
+    /**
+     * Тест для фильтрации клиентов по имени.
+     */
     @Test
-    public void testDoGetFilterByName() throws Exception {
+    void testFilterClientsByName() throws Exception {
+        // Данные для теста
+        List<ClientDTO> filteredClients = Arrays.asList(
+                new ClientDTO(1, "John", "john@example.com", 5)
+        );
 
-        List<ClientDTO> filteredClients = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn("filterByName");
-        when(request.getParameter("name")).thenReturn("John");
+        // Мокируем поведение сервиса
         when(userService.filterClientsByName("John")).thenReturn(filteredClients);
 
+        // Выполняем запрос с фильтрацией по имени
+        ResponseEntity<List<ClientDTO>> response = clientController.getClients("filterByName", "John", null, null, null);
 
-        clientController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(userService).filterClientsByName("John");
+        // Проверяем ответ
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(filteredClients, response.getBody());
     }
 
+    /**
+     * Тест для обработки ситуации, когда имя для фильтрации не указано.
+     */
     @Test
-    public void testDoGetFilterByNameBadRequest() throws Exception {
-
-        when(request.getParameter("action")).thenReturn("filterByName");
-        when(request.getParameter("name")).thenReturn(null);
-
-
-        clientController.doGet(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Имя не указано");
+    void testFilterClientsByNameWithoutName() throws Exception {
+        // Ожидаем выброс исключения InvalidParameterException
+        assertThrows(InvalidParameterException.class, () -> {
+            clientController.getClients("filterByName", null, null, null, null);
+        });
     }
 
+    /**
+     * Тест для фильтрации клиентов по количеству заказов.
+     */
     @Test
-    public void testDoGetFilterByContactInfo() throws Exception {
+    void testFilterClientsByOrders() throws Exception {
+        // Данные для теста
+        List<ClientDTO> filteredClients = Arrays.asList(
+                new ClientDTO(2, "Jane", "jane@example.com", 10)
+        );
 
-        List<ClientDTO> filteredClients = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn("filterByContactInfo");
-        when(request.getParameter("contactInfo")).thenReturn("test@example.com");
-        when(userService.filterClientsByContactInfo("test@example.com")).thenReturn(filteredClients);
+        // Мокируем поведение сервиса
+        when(userService.filterClientsByOrders(5, 10)).thenReturn(filteredClients);
 
+        // Выполняем запрос с фильтрацией по количеству заказов
+        ResponseEntity<List<ClientDTO>> response = clientController.getClients("filterByOrders", null, null, 5, 10);
 
-        clientController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(userService).filterClientsByContactInfo("test@example.com");
+        // Проверяем ответ
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(filteredClients, response.getBody());
     }
 
+    /**
+     * Тест для обработки некорректных параметров фильтрации по количеству заказов.
+     */
     @Test
-    public void testDoGetFilterByContactInfoBadRequest() throws Exception {
-
-        when(request.getParameter("action")).thenReturn("filterByContactInfo");
-        when(request.getParameter("contactInfo")).thenReturn(null);
-
-
-        clientController.doGet(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Контактная информация не указана");
+    void testFilterClientsByOrdersWithInvalidParameters() throws Exception {
+        // Ожидаем выброс исключения InvalidParameterException
+        assertThrows(InvalidParameterException.class, () -> {
+            clientController.getClients("filterByOrders", null, null, null, null);
+        });
     }
 
+    /**
+     * Тест для обработки ошибки "Клиенты не найдены".
+     */
     @Test
-    public void testDoGetSortByName() throws Exception {
+    void testGetClientsNotFound() throws Exception {
+        // Мокируем выброс исключения ClientNotFoundException
+        when(userService.getAllClients()).thenThrow(new ClientNotFoundException("Clients not found"));
 
-        List<ClientDTO> sortedClients = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn("sortByName");
-        when(userService.sortClientsByName()).thenReturn(sortedClients);
+        // Выполняем запрос
+        ResponseEntity<List<ClientDTO>> response = clientController.getClients(null, null, null, null, null);
 
-
-        clientController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(userService).sortClientsByName();
+        // Проверяем ответ
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(response.getBody().isEmpty());
     }
 
+    /**
+     * Тест для обработки ошибки с базой данных.
+     */
     @Test
-    public void testDoGetFilterByOrders() throws Exception {
+    void testGetClientsDatabaseError() throws Exception {
+        // Мокируем выброс SQLException
+        when(userService.getAllClients()).thenThrow(new SQLException("Database error"));
 
-        List<ClientDTO> filteredClients = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn("filterByOrders");
-        when(request.getParameter("minOrders")).thenReturn("5");
-        when(request.getParameter("maxOrders")).thenReturn("15");
-        when(userService.filterClientsByOrders(5, 15)).thenReturn(filteredClients);
+        // Выполняем запрос
+        ResponseEntity<List<ClientDTO>> response = clientController.getClients(null, null, null, null, null);
 
-
-        clientController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(userService).filterClientsByOrders(5, 15);
-    }
-
-    @Test
-    public void testDoGetFilterByOrdersNumberFormatException() throws Exception {
-
-        when(request.getParameter("action")).thenReturn("filterByOrders");
-        when(request.getParameter("minOrders")).thenReturn("invalid");
-        when(request.getParameter("maxOrders")).thenReturn("15");
-
-
-        clientController.doGet(request, response);
-
-
-        verify(response).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка обработки запроса");
-    }
-
-    @Test
-    public void testDoGetSortByOrders() throws Exception {
-
-        List<ClientDTO> sortedClients = Collections.singletonList(new ClientDTO());
-        when(request.getParameter("action")).thenReturn("sortByOrders");
-        when(userService.sortClientsByOrders()).thenReturn(sortedClients);
-
-
-        clientController.doGet(request, response);
-
-
-        verify(response).setContentType("application/json");
-        verify(userService).sortClientsByOrders();
+        // Проверяем ответ
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(response.getBody().isEmpty());
     }
 }
