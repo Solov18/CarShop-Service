@@ -3,6 +3,8 @@ package org.example.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ClientDTO;
@@ -56,6 +58,12 @@ public class ClientController {
      * @return Список клиентов, соответствующих указанным параметрам, или пустой список при ошибках
      */
     @Operation(summary = "Получить список клиентов", description = "Получить список клиентов с возможностью фильтрации и сортировки")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список клиентов успешно возвращен"),
+            @ApiResponse(responseCode = "400", description = "Некорректные параметры запроса"),
+            @ApiResponse(responseCode = "404", description = "Клиенты не найдены"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @GetMapping
     public ResponseEntity<List<ClientDTO>> getClients(
             @Parameter(description = "Тип действия (фильтрация/сортировка)") @RequestParam(value = "action", required = false) String action,

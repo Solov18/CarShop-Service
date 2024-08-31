@@ -7,13 +7,34 @@ spring:
     username: user
     password: password
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
-  springfox:
-    documentation:
-      swagger:
-        v2:
-          path: /v2/api-docs
+
+  doc:
+    api:
+      v3:
+        path: /v3/api-docs
+        title: "My API Documentation"
+        description: "API documentation for my application."
+        version: "1.0.0"
+        termsOfService: "http://example.com/terms"
+        contact:
+          name: "Support Team"
+          url: "http://example.com/support"
+          email: "support@example.com"
+        license:
+          name: "License"
+          url: "http://example.com/license"
+
+
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+    packages-to-scan:
+      - org.example.controller

@@ -2,6 +2,9 @@ package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.CarDTO;
@@ -30,15 +33,19 @@ public class CarController {
     }
 
     @Operation(summary = "Получить список автомобилей", description = "Получение списка всех доступных автомобилей или поиск по параметрам")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список автомобилей успешно возвращен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при получении списка автомобилей")
+    })
     @GetMapping
     public ResponseEntity<?> getCars(
-            @RequestParam(value = "id", required = false) Integer id,
-            @RequestParam(value = "make", required = false) String make,
-            @RequestParam(value = "model", required = false) String model,
-            @RequestParam(value = "year", required = false) Integer year,
-            @RequestParam(value = "minPrice", required = false) Double minPrice,
-            @RequestParam(value = "maxPrice", required = false) Double maxPrice,
-            @RequestParam(value = "condition", required = false) String condition) {
+            @Parameter(description = "ID автомобиля", example = "1") @RequestParam(value = "id", required = false) Integer id,
+            @Parameter(description = "Марка автомобиля") @RequestParam(value = "make", required = false) String make,
+            @Parameter(description = "Модель автомобиля") @RequestParam(value = "model", required = false) String model,
+            @Parameter(description = "Год выпуска автомобиля") @RequestParam(value = "year", required = false) Integer year,
+            @Parameter(description = "Минимальная цена") @RequestParam(value = "minPrice", required = false) Double minPrice,
+            @Parameter(description = "Максимальная цена") @RequestParam(value = "maxPrice", required = false) Double maxPrice,
+            @Parameter(description = "Состояние автомобиля") @RequestParam(value = "condition", required = false) String condition) {
 
         try {
             log.info("Fetching cars with parameters: id={}, make={}, model={}, year={}, minPrice={}, maxPrice={}, condition={}",
@@ -62,10 +69,14 @@ public class CarController {
     }
 
     @Operation(summary = "Получить список автомобилей по диапазону цен", description = "Получение списка автомобилей, у которых цена в заданном диапазоне")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список автомобилей успешно возвращен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при получении автомобилей по диапазону цен")
+    })
     @GetMapping("/price-range")
     public ResponseEntity<?> getCarsByPriceRange(
-            @RequestParam("minPrice") double minPrice,
-            @RequestParam("maxPrice") double maxPrice) {
+            @Parameter(description = "Минимальная цена", example = "5000.0") @RequestParam("minPrice") double minPrice,
+            @Parameter(description = "Максимальная цена", example = "30000.0") @RequestParam("maxPrice") double maxPrice) {
         try {
             log.info("Fetching cars in price range: {} - {}", minPrice, maxPrice);
             List<CarDTO> carsDTO = carService.getCarsByPriceRange(minPrice, maxPrice);
@@ -77,10 +88,14 @@ public class CarController {
     }
 
     @Operation(summary = "Получить список автомобилей по диапазону годов", description = "Получение списка автомобилей, у которых год выпуска в заданном диапазоне")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список автомобилей успешно возвращен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при получении автомобилей по диапазону годов")
+    })
     @GetMapping("/year-range")
     public ResponseEntity<?> getCarsByYearRange(
-            @RequestParam("minYear") int minYear,
-            @RequestParam("maxYear") int maxYear) {
+            @Parameter(description = "Минимальный год выпуска", example = "2000") @RequestParam("minYear") int minYear,
+            @Parameter(description = "Максимальный год выпуска", example = "2022") @RequestParam("maxYear") int maxYear) {
         try {
             log.info("Fetching cars in year range: {} - {}", minYear, maxYear);
             List<CarDTO> carsDTO = carService.getCarsByYearRange(minYear, maxYear);
@@ -92,8 +107,13 @@ public class CarController {
     }
 
     @Operation(summary = "Добавить новый автомобиль", description = "Добавление новой записи об автомобиле")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Автомобиль успешно добавлен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при добавлении нового автомобиля")
+    })
     @PostMapping
-    public ResponseEntity<CarDTO> addCar(@RequestBody CarDTO carDTO) {
+    public ResponseEntity<CarDTO> addCar(
+            @Parameter(description = "Данные нового автомобиля", required = true) @RequestBody CarDTO carDTO) {
         try {
             log.info("Adding new car: {}", carDTO);
             CarDTO addedCar = carService.addCar(carDTO);
@@ -105,8 +125,14 @@ public class CarController {
     }
 
     @Operation(summary = "Обновить информацию об автомобиле", description = "Обновление существующей записи об автомобиле")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Автомобиль успешно обновлён"),
+            @ApiResponse(responseCode = "404", description = "Автомобиль не найден для обновления"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при обновлении автомобиля")
+    })
     @PutMapping
-    public ResponseEntity<String> updateCar(@RequestBody CarDTO carDTO) {
+    public ResponseEntity<String> updateCar(
+            @Parameter(description = "Данные автомобиля для обновления", required = true) @RequestBody CarDTO carDTO) {
         try {
             log.info("Updating car: {}", carDTO);
             boolean updated = carService.updateCar(carDTO);
@@ -122,8 +148,15 @@ public class CarController {
     }
 
     @Operation(summary = "Удалить автомобиль", description = "Удаление записи об автомобиле по ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Автомобиль успешно удалён"),
+            @ApiResponse(responseCode = "400", description = "ID автомобиля не указан"),
+            @ApiResponse(responseCode = "404", description = "Автомобиль не найден для удаления"),
+            @ApiResponse(responseCode = "500", description = "Ошибка при удалении автомобиля")
+    })
     @DeleteMapping
-    public ResponseEntity<String> deleteCar(@RequestParam("id") Integer id) {
+    public ResponseEntity<String> deleteCar(
+            @Parameter(description = "ID автомобиля для удаления", example = "1") @RequestParam("id") Integer id) {
         try {
             log.info("Deleting car with id: {}", id);
             if (Objects.nonNull(id)) {

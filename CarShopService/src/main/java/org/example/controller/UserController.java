@@ -3,6 +3,8 @@ package org.example.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthenticationDTO;
@@ -35,6 +37,10 @@ public class UserController {
     }
 
     @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список пользователей успешно возвращен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         try {
@@ -47,6 +53,10 @@ public class UserController {
     }
 
     @Operation(summary = "Получить всех клиентов", description = "Возвращает список всех клиентов")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список клиентов успешно возвращен"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @GetMapping("/clients")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         try {
@@ -59,6 +69,11 @@ public class UserController {
     }
 
     @Operation(summary = "Получить клиента по имени пользователя", description = "Возвращает данные клиента по его имени пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Данные клиента успешно возвращены"),
+            @ApiResponse(responseCode = "404", description = "Клиент не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @GetMapping("/client")
     public ResponseEntity<?> getClientByUsername(
             @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {
@@ -75,6 +90,12 @@ public class UserController {
     }
 
     @Operation(summary = "Регистрация пользователя", description = "Регистрация нового пользователя в системе")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
+            @ApiResponse(responseCode = "400", description = "Ошибка в данных регистрации пользователя"),
+            @ApiResponse(responseCode = "409", description = "Пользователь уже существует"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(
             @Parameter(description = "Данные нового пользователя", required = true) @RequestBody AuthenticationDTO authenticationDTO) {
@@ -91,6 +112,11 @@ public class UserController {
     }
 
     @Operation(summary = "Аутентификация пользователя", description = "Проверка учетных данных пользователя для аутентификации")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь успешно аутентифицирован"),
+            @ApiResponse(responseCode = "401", description = "Неверное имя пользователя или пароль"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(
             @Parameter(description = "Данные для аутентификации", required = true) @RequestBody AuthenticationDTO authDTO) {
@@ -108,6 +134,10 @@ public class UserController {
     }
 
     @Operation(summary = "Увеличение количества заказов пользователя", description = "Увеличивает количество заказов пользователя по его имени пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Количество заказов успешно увеличено"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @PutMapping("/increaseOrders")
     public ResponseEntity<String> increaseOrders(
             @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {
@@ -121,6 +151,11 @@ public class UserController {
     }
 
     @Operation(summary = "Удаление пользователя", description = "Удаляет пользователя по его имени пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Пользователь успешно удален"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @DeleteMapping
     public ResponseEntity<String> deleteUser(
             @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {

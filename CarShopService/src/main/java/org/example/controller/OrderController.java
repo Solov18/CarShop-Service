@@ -2,6 +2,8 @@ package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.OrderDTO;
@@ -37,6 +39,11 @@ public class OrderController {
      *         В случае ошибки базы данных возвращает HTTP-статус 500 Internal Server Error.
      */
     @Operation(summary = "Создает новый заказ", description = "Создает новый заказ и возвращает созданный объект заказа.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Ошибка в данных заказа"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(
             @Parameter(description = "Объект передачи данных заказа, содержащий информацию о заказе.")
@@ -63,6 +70,11 @@ public class OrderController {
      */
     @Operation(summary = "Получает информацию о заказе по его идентификатору",
             description = "Получает информацию о заказе по его идентификатору.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Информация о заказе успешно возвращена"),
+            @ApiResponse(responseCode = "404", description = "Заказ не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrderById(
             @Parameter(description = "Идентификатор заказа.") @PathVariable int id) {
@@ -89,6 +101,11 @@ public class OrderController {
      */
     @Operation(summary = "Обновляет статус заказа по его идентификатору",
             description = "Обновляет статус заказа по его идентификатору.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Статус заказа успешно обновлен"),
+            @ApiResponse(responseCode = "404", description = "Заказ не найден"),
+            @ApiResponse(responseCode = "500", description = "Ошибка работы с базой данных")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateOrderStatus(
             @Parameter(description = "Идентификатор заказа.") @PathVariable int id,
