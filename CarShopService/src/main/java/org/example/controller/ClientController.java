@@ -1,9 +1,9 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.ClientDTO;
 import org.example.exception.ClientNotFoundException;
@@ -23,10 +23,10 @@ import java.util.Objects;
  * Предоставляет API для получения списка клиентов с возможностью фильтрации и сортировки,
  * а также обработки ошибок, связанных с клиентами и параметрами запроса.
  */
-@Api(value = "Client API", tags = {"Clients"})
 @RestController
 @RequestMapping("/api/clients")
 @Slf4j
+@Tag(name = "Clients", description = "API для управления клиентами")
 public class ClientController {
 
     private final UserService userService;
@@ -55,14 +55,14 @@ public class ClientController {
      * @param maxOrders Максимальное количество заказов (требуется при фильтрации по количеству заказов)
      * @return Список клиентов, соответствующих указанным параметрам, или пустой список при ошибках
      */
-    @ApiOperation(value = "Получить список клиентов", notes = "Получить список клиентов с возможностью фильтрации и сортировки")
+    @Operation(summary = "Получить список клиентов", description = "Получить список клиентов с возможностью фильтрации и сортировки")
     @GetMapping
     public ResponseEntity<List<ClientDTO>> getClients(
-            @ApiParam(value = "Тип действия (фильтрация/сортировка)") @RequestParam(value = "action", required = false) String action,
-            @ApiParam(value = "Имя клиента") @RequestParam(value = "name", required = false) String name,
-            @ApiParam(value = "Контактная информация клиента") @RequestParam(value = "contactInfo", required = false) String contactInfo,
-            @ApiParam(value = "Минимальное количество заказов") @RequestParam(value = "minOrders", required = false) Integer minOrders,
-            @ApiParam(value = "Максимальное количество заказов") @RequestParam(value = "maxOrders", required = false) Integer maxOrders) {
+            @Parameter(description = "Тип действия (фильтрация/сортировка)") @RequestParam(value = "action", required = false) String action,
+            @Parameter(description = "Имя клиента") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "Контактная информация клиента") @RequestParam(value = "contactInfo", required = false) String contactInfo,
+            @Parameter(description = "Минимальное количество заказов") @RequestParam(value = "minOrders", required = false) Integer minOrders,
+            @Parameter(description = "Максимальное количество заказов") @RequestParam(value = "maxOrders", required = false) Integer maxOrders) {
 
         try {
             log.info("Получение клиентов с параметрами: action={}, name={}, contactInfo={}, minOrders={}, maxOrders={}",

@@ -12,6 +12,8 @@
       <change beforePath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/EmbeddedTomcat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/CarShopServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CarController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/CarController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/ClientController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/ClientController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditLog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/LoggingAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/logi/LoggingAspect.java" afterDir="false" />

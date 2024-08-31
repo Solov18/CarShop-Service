@@ -1,8 +1,8 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.CarDTO;
 import org.example.service.CarService;
@@ -14,15 +14,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Контроллер для управления автомобилями.
- * Предоставляет API для выполнения CRUD операций с автомобилями, включая получение списка,
- * добавление, обновление и удаление автомобилей, а также поиск по параметрам.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/cars")
-@Api(value = "Car API", tags = {"Автомобили"})
+@Tag(name = "Car API", description = "API для управления автомобилями")
 public class CarController {
 
     private final CarService carService;
@@ -34,19 +29,7 @@ public class CarController {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Получение списка автомобилей. Возможность поиска по параметрам или получение всего списка.
-     *
-     * @param id ID автомобиля (необязательный параметр)
-     * @param make Производитель автомобиля (необязательный параметр)
-     * @param model Модель автомобиля (необязательный параметр)
-     * @param year Год выпуска автомобиля (необязательный параметр)
-     * @param minPrice Минимальная цена автомобиля (необязательный параметр)
-     * @param maxPrice Максимальная цена автомобиля (необязательный параметр)
-     * @param condition Состояние автомобиля (необязательный параметр)
-     * @return Список автомобилей, соответствующих критериям поиска, или весь список доступных автомобилей
-     */
-    @ApiOperation(value = "Получить список автомобилей", notes = "Получение списка всех доступных автомобилей или поиск по параметрам")
+    @Operation(summary = "Получить список автомобилей", description = "Получение списка всех доступных автомобилей или поиск по параметрам")
     @GetMapping
     public ResponseEntity<?> getCars(
             @RequestParam(value = "id", required = false) Integer id,
@@ -78,14 +61,7 @@ public class CarController {
         }
     }
 
-    /**
-     * Получение списка автомобилей по диапазону цен.
-     *
-     * @param minPrice Минимальная цена
-     * @param maxPrice Максимальная цена
-     * @return Список автомобилей в указанном диапазоне цен
-     */
-    @ApiOperation(value = "Получить список автомобилей по диапазону цен", notes = "Получение списка автомобилей, у которых цена в заданном диапазоне")
+    @Operation(summary = "Получить список автомобилей по диапазону цен", description = "Получение списка автомобилей, у которых цена в заданном диапазоне")
     @GetMapping("/price-range")
     public ResponseEntity<?> getCarsByPriceRange(
             @RequestParam("minPrice") double minPrice,
@@ -100,14 +76,7 @@ public class CarController {
         }
     }
 
-    /**
-     * Получение списка автомобилей по диапазону годов выпуска.
-     *
-     * @param minYear Минимальный год выпуска
-     * @param maxYear Максимальный год выпуска
-     * @return Список автомобилей, выпущенных в указанном диапазоне годов
-     */
-    @ApiOperation(value = "Получить список автомобилей по диапазону годов", notes = "Получение списка автомобилей, у которых год выпуска в заданном диапазоне")
+    @Operation(summary = "Получить список автомобилей по диапазону годов", description = "Получение списка автомобилей, у которых год выпуска в заданном диапазоне")
     @GetMapping("/year-range")
     public ResponseEntity<?> getCarsByYearRange(
             @RequestParam("minYear") int minYear,
@@ -122,13 +91,7 @@ public class CarController {
         }
     }
 
-    /**
-     * Добавление нового автомобиля.
-     *
-     * @param carDTO DTO объекта автомобиля для добавления
-     * @return Добавленный автомобиль
-     */
-    @ApiOperation(value = "Добавить новый автомобиль", notes = "Добавление новой записи об автомобиле")
+    @Operation(summary = "Добавить новый автомобиль", description = "Добавление новой записи об автомобиле")
     @PostMapping
     public ResponseEntity<CarDTO> addCar(@RequestBody CarDTO carDTO) {
         try {
@@ -141,13 +104,7 @@ public class CarController {
         }
     }
 
-    /**
-     * Обновление информации об автомобиле.
-     *
-     * @param carDTO DTO объекта автомобиля с обновленной информацией
-     * @return Сообщение о результате обновления
-     */
-    @ApiOperation(value = "Обновить информацию об автомобиле", notes = "Обновление существующей записи об автомобиле")
+    @Operation(summary = "Обновить информацию об автомобиле", description = "Обновление существующей записи об автомобиле")
     @PutMapping
     public ResponseEntity<String> updateCar(@RequestBody CarDTO carDTO) {
         try {
@@ -164,13 +121,7 @@ public class CarController {
         }
     }
 
-    /**
-     * Удаление автомобиля по его ID.
-     *
-     * @param id ID автомобиля для удаления
-     * @return Сообщение о результате удаления
-     */
-    @ApiOperation(value = "Удалить автомобиль", notes = "Удаление записи об автомобиле по ID")
+    @Operation(summary = "Удалить автомобиль", description = "Удаление записи об автомобиле по ID")
     @DeleteMapping
     public ResponseEntity<String> deleteCar(@RequestParam("id") Integer id) {
         try {

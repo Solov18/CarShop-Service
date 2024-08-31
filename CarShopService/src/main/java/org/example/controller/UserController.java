@@ -1,9 +1,9 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.List;
 
-@Api(value = "User API", tags = {"Users"})
+@Tag(name = "Users", description = "API для управления пользователями и клиентами")
 @RestController
 @RequestMapping("/api/users")
 @Slf4j
@@ -34,7 +34,7 @@ public class UserController {
         this.objectMapper = objectMapper;
     }
 
-    @ApiOperation(value = "Получить всех пользователей", notes = "Возвращает список всех пользователей")
+    @Operation(summary = "Получить всех пользователей", description = "Возвращает список всех пользователей")
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         try {
@@ -46,7 +46,7 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Получить всех клиентов", notes = "Возвращает список всех клиентов")
+    @Operation(summary = "Получить всех клиентов", description = "Возвращает список всех клиентов")
     @GetMapping("/clients")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         try {
@@ -58,10 +58,10 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Получить клиента по имени пользователя", notes = "Возвращает данные клиента по его имени пользователя")
+    @Operation(summary = "Получить клиента по имени пользователя", description = "Возвращает данные клиента по его имени пользователя")
     @GetMapping("/client")
     public ResponseEntity<?> getClientByUsername(
-            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
+            @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {
         try {
             ClientDTO clientDTO = userService.getClientByUsername(username);
             return ResponseEntity.ok(clientDTO);
@@ -74,10 +74,10 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Регистрация пользователя", notes = "Регистрация нового пользователя в системе")
+    @Operation(summary = "Регистрация пользователя", description = "Регистрация нового пользователя в системе")
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(
-            @ApiParam(value = "Данные нового пользователя", required = true) @RequestBody AuthenticationDTO authenticationDTO) {
+            @Parameter(description = "Данные нового пользователя", required = true) @RequestBody AuthenticationDTO authenticationDTO) {
         try {
             userService.registerUser(authenticationDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Пользователь зарегистрирован");
@@ -90,10 +90,10 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Аутентификация пользователя", notes = "Проверка учетных данных пользователя для аутентификации")
+    @Operation(summary = "Аутентификация пользователя", description = "Проверка учетных данных пользователя для аутентификации")
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(
-            @ApiParam(value = "Данные для аутентификации", required = true) @RequestBody AuthenticationDTO authDTO) {
+            @Parameter(description = "Данные для аутентификации", required = true) @RequestBody AuthenticationDTO authDTO) {
         try {
             UserDTO userDTO = userService.authenticate(authDTO.getUsername(), authDTO.getPassword());
             if (userDTO != null) {
@@ -107,10 +107,10 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Увеличение количества заказов пользователя", notes = "Увеличивает количество заказов пользователя по его имени пользователя")
+    @Operation(summary = "Увеличение количества заказов пользователя", description = "Увеличивает количество заказов пользователя по его имени пользователя")
     @PutMapping("/increaseOrders")
     public ResponseEntity<String> increaseOrders(
-            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
+            @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {
         try {
             userService.increaseOrderCount(username);
             return ResponseEntity.ok("Количество заказов увеличено");
@@ -120,10 +120,10 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "Удаление пользователя", notes = "Удаляет пользователя по его имени пользователя")
+    @Operation(summary = "Удаление пользователя", description = "Удаляет пользователя по его имени пользователя")
     @DeleteMapping
     public ResponseEntity<String> deleteUser(
-            @ApiParam(value = "Имя пользователя", required = true) @RequestParam String username) {
+            @Parameter(description = "Имя пользователя", required = true) @RequestParam String username) {
         try {
             if (userService.userExists(username)) {
                 userService.removeUser(username);
