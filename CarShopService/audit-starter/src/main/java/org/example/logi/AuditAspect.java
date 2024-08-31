@@ -1,17 +1,18 @@
 package org.example.logi;
 
-import jakarta.servlet.http.HttpServletRequest;
+
+
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.example.repository.AuditLogRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+
 
 import java.time.LocalDateTime;
 
@@ -21,11 +22,11 @@ public class AuditAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
 
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogService auditLogService;
 
     @Autowired
-    public AuditAspect(AuditLogRepository auditLogRepository) {
-        this.auditLogRepository = auditLogRepository;
+    public AuditAspect(AuditLogService auditLogService) {
+        this.auditLogService = auditLogService;
     }
 
     @Pointcut("execution(* org.example.controller..*(..))")
@@ -37,15 +38,10 @@ public class AuditAspect {
         String username = getCurrentUsername();
         String details = "Request completed successfully";
 
-        AuditLog log = new AuditLog();
-        log.setTimestamp(LocalDateTime.now());
-        log.setActionType(actionType);
-        log.setUsername(username);
-        log.setDetails(details);
+        // Используем сервис для записи лога
+        auditLogService.logAction(actionType, username, details);
 
-        logger.info("Saving audit log: {}", log);
-
-        auditLogRepository.save(log);
+        logger.info("Audit log saved: actionType={}, username={}, details={}", actionType, username, details);
     }
 
     private String getCurrentUsername() {
