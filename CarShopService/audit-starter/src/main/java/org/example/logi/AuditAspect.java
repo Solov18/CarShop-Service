@@ -38,7 +38,7 @@ public class AuditAspect {
         String username = getCurrentUsername();
         String details = "Request completed successfully";
 
-        // Используем сервис для записи лога
+
         auditLogService.logAction(actionType, username, details);
 
         logger.info("Audit log saved: actionType={}, username={}, details={}", actionType, username, details);
