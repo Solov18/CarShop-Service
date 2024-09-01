@@ -5,11 +5,108 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/CarShopService-app/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/audit-starter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/audit-starter/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auto" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cars.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cars_test.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/liquibase.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/logging-starter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/logging-starter/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/CarShopServiceApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/AppConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/OpenApiConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/WebConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/CarController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/ClientController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/OrderController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/UserController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/AdminDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/AuthenticationDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/CarDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/ClientDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/ManagerDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/OrderDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/UserDTO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/CarNotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/ClientNotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/DatabaseException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/InvalidOrderDataException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/InvalidParameterException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/OrderNotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/exception/UserAlreadyExistsException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditLogConfiguration.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/AuditLogServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/EnableAuditLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/EnableLogging.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/LoggingAspect.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/LoggingAutoConfiguration.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/RequestContext.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/logi/RequestContextFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/AdminMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/AuthenticationMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/CarMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/ClientMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/ManagerMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/OrderMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/mapper/UserMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Admin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Car.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Client.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Manager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/Order.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/model/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/AuditLogRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/CarRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/JdbcAuditLogRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/OrderRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/CarService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/UserService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/favicon-16x16.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/favicon-32x32.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/index.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/oauth2-redirect.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-initializer.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-bundle.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-bundle.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle-core.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle-core.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-standalone-preset.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-standalone-preset.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.css.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/audit-log-table.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/cars-tables.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/changelog-data.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/db.changelog-master.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/orders-tables.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db/changelog/users-schema.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/logback-spring.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/CarControllerTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/ClientControllerTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/OrderControllerTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/UserControllerTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/serviseTest/CarServiceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/serviseTest/OrderServiceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/testBase/DatabaseTestBase.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/testBase/UserRepositoryTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_cars.dat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/untitled/src/main/java/org/example/Main.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
