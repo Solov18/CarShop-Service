@@ -13,6 +13,8 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
 
   doc:
     api:
@@ -29,7 +31,6 @@ spring:
         license:
           name: "License"
           url: "http://example.com/license"
-
 
   springdoc:
     api-docs:
