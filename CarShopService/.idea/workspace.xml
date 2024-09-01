@@ -4,43 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/config/OpenApiConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/config/WebConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/AuditLog.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/AuditLogConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/EnableAuditLog.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/EnableLogging.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/LoggingAspect.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/LoggingAutoConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/RequestContext.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/java/org/example/logi/RequestContextFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/favicon-16x16.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/favicon-32x32.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/index.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/oauth2-redirect.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-initializer.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-bundle.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-bundle.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle-core.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle-core.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-es-bundle.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-standalone-preset.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui-standalone-preset.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.css.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/META-INF/resources/swagger-ui/swagger-ui.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/audit-starter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/audit-starter/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/audit-starter/src/main/java/org/example/logi/AuditAspect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logging-starter/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/logging-starter/pom.xml" afterDir="false" />
-    </list>
+    <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
