@@ -8,31 +8,11 @@ spring:
     password: password
     driver-class-name: org.postgresql.Driver
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
 
-  doc:
-    api:
-      v3:
-        path: /v3/api-docs
-        title: "My API Documentation"
-        description: "API documentation for my application."
-        version: "1.0.0"
-        termsOfService: "http://example.com/terms"
-        contact:
-          name: "Support Team"
-          url: "http://example.com/support"
-          email: "support@example.com"
-        license:
-          name: "License"
-          url: "http://example.com/license"
 
-  springdoc:
+  spring-doc:
     api-docs:
       path: /v3/api-docs
     swagger-ui:

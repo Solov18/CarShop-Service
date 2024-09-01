@@ -32,38 +32,32 @@
         <logback.version>1.5.7</logback.version>
         <slf4j.version>2.1.0-alpha1</slf4j.version>
         <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <mapstruct.version>1.6.0</mapstruct.version>
     </properties>
 
-
     <dependencies>
-
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.8.0</version>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>1.6.0</version>
+            <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
-            <version>1.6.0</version>
+            <version>${mapstruct.version}</version>
         </dependency>
-
-
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
@@ -75,8 +69,6 @@
             <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -87,7 +79,6 @@
             <artifactId>spring-boot-starter-web</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
-
         <!-- Зависимость на модуль логирования -->
         <dependency>
             <groupId>org.example</groupId>
@@ -125,8 +116,6 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -160,15 +149,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-
-
-
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>${hibernate-validator.version}</version>
         </dependency>
-
 
     </dependencies>
 
