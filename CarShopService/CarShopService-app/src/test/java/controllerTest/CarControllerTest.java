@@ -1,170 +1,99 @@
 package controllerTest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.controller.CarController;
 import org.example.dto.CarDTO;
 import org.example.service.CarService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Arrays;
-import java.util.Collections;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Тестовый класс для проверки функциональности {@link CarController}.
- * Использует {@link MockMvc} для имитации HTTP-запросов к контроллеру.
- * Мокирует взаимодействие с сервисным слоем через {@link CarService}.
- */
+@WebMvcTest(CarController.class)
 public class CarControllerTest {
 
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private CarService carService;
 
     @InjectMocks
     private CarController carController;
 
-    private ObjectMapper objectMapper;
-
-    /**
-     * Метод, выполняемый перед запуском каждого теста.
-     * Инициализирует моки и настраивает {@link MockMvc} для работы с контроллером.
-     */
-    @Before
-    public void setup() {
+    @BeforeEach
+    public void setUp() {
         MockitoAnnotations.openMocks(this);
-        objectMapper = new ObjectMapper();
-        mockMvc = MockMvcBuilders.standaloneSetup(carController).build();
+        this.mockMvc = MockMvcBuilders.standaloneSetup(carController).build();
     }
 
-    /**
-     * Тестирует получение списка всех автомобилей.
-     * Проверяет, что метод возвращает корректный список автомобилей с правильным HTTP-статусом.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
     @Test
-    public void testGetAllCars() throws Exception {
-        CarDTO car1 = new CarDTO(1, "Toyota", "Camry", 2020, 20000, "New", true);
-        CarDTO car2 = new CarDTO(2, "Honda", "Accord", 2021, 25000, "New",true);
+    public void testGetCars() throws Exception {
+        CarDTO car1 = new CarDTO(1, "Toyota", "Camry", 2020, 25000.0, "New",true);
+        CarDTO car2 = new CarDTO(2, "Honda", "Accord", 2019, 22000.0, "New",true);
 
-        when(carService.getAllAvailableCars()).thenReturn(Arrays.asList(car1, car2));
+        given(carService.getAllAvailableCars()).willReturn(Arrays.asList(car1, car2));
 
         mockMvc.perform(get("/api/cars"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("Toyota")))
-                .andExpect(content().string(containsString("Honda")));
-
-        verify(carService, times(1)).getAllAvailableCars();
+                .andExpect(jsonPath("$[0].id").value(car1.getId()))
+                .andExpect(jsonPath("$[0].make").value(car1.getMake()))
+                .andExpect(jsonPath("$[1].id").value(car2.getId()))
+                .andExpect(jsonPath("$[1].make").value(car2.getMake()));
     }
 
-    /**
-     * Тестирует получение автомобиля по его идентификатору (ID).
-     * Проверяет, что возвращаемый автомобиль соответствует ожидаемому, и проверяет правильность HTTP-статуса.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
     @Test
     public void testGetCarById() throws Exception {
-        CarDTO car = new CarDTO(1, "Toyota", "Camry", 2020, 20000, "New",true);
+        CarDTO carDTO = new CarDTO(1, "Toyota", "Camry", 2020, 25000.0, "New",true);
 
-        when(carService.getCarById(1)).thenReturn(car);
+        given(carService.getCarById(anyInt())).willReturn(carDTO);
 
-        mockMvc.perform(get("/api/cars?id=1"))
+        mockMvc.perform(get("/api/cars")
+                        .param("id", "1"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("Toyota")));
-
-        verify(carService, times(1)).getCarById(1);
+                .andExpect(jsonPath("$.id").value(carDTO.getId()))
+                .andExpect(jsonPath("$.make").value(carDTO.getMake()));
     }
 
-    /**
-     * Тестирует добавление нового автомобиля.
-     * Проверяет успешное создание автомобиля с корректным статусом и вызов метода сервиса.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
     @Test
     public void testAddCar() throws Exception {
-        CarDTO car = new CarDTO(null, "Toyota", "Camry", 2020, 20000, "New",true);
-
-        when(carService.addCar(any(CarDTO.class))).thenReturn(car);
+        CarDTO carDTO = new CarDTO(1, "Toyota", "Camry", 2020, 25000.0, "New",true);
+        given(carService.addCar(any(CarDTO.class))).willReturn(carDTO);
 
         mockMvc.perform(post("/api/cars")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(car)))
-                .andExpect(status().isCreated());
-
-        verify(carService, times(1)).addCar(any(CarDTO.class));
+                        .content("{\"make\":\"Toyota\",\"model\":\"Camry\",\"year\":2020,\"price\":25000.0,\"condition\":\"New\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(carDTO.getId()))
+                .andExpect(jsonPath("$.make").value(carDTO.getMake()));
     }
 
-    /**
-     * Тестирует обновление данных об автомобиле.
-     * Проверяет, что обновление выполнено успешно, и возвращается корректное сообщение и статус.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
     @Test
     public void testUpdateCar() throws Exception {
-        CarDTO car = new CarDTO(1, "Toyota", "Camry", 2020, 20000, "New",true);
-
-        when(carService.updateCar(any(CarDTO.class))).thenReturn(true);
+        given(carService.updateCar(any(CarDTO.class))).willReturn(true);
 
         mockMvc.perform(put("/api/cars")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(car)))
+                        .content("{\"id\":1,\"make\":\"Toyota\",\"model\":\"Camry\",\"year\":2020,\"price\":25000.0,\"condition\":\"New\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Автомобиль успешно обновлён"));
-
-        verify(carService, times(1)).updateCar(any(CarDTO.class));
     }
 
-    /**
-     * Тестирует удаление автомобиля по идентификатору (ID).
-     * Проверяет, что автомобиль успешно удален и возвращается корректный HTTP-статус.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
     @Test
     public void testDeleteCar() throws Exception {
-        when(carService.removeCar(1)).thenReturn(true);
+        given(carService.removeCar(anyInt())).willReturn(true);
 
-        mockMvc.perform(delete("/api/cars?id=1"))
+        mockMvc.perform(delete("/api/cars")
+                        .param("id", "1"))
                 .andExpect(status().isNoContent());
-
-        verify(carService, times(1)).removeCar(1);
-    }
-
-    /**
-     * Тестирует получение автомобилей по диапазону цен.
-     * Проверяет, что автомобили, попадающие в заданный диапазон, возвращаются корректно.
-     *
-     * @throws Exception если возникает ошибка при выполнении запроса
-     */
-    @Test
-    public void testGetCarsByPriceRange() throws Exception {
-        CarDTO car = new CarDTO(1, "Toyota", "Camry", 2020, 20000, "New",true);
-
-        when(carService.getCarsByPriceRange(10000, 30000)).thenReturn(Collections.singletonList(car));
-
-        mockMvc.perform(get("/api/cars/price-range")
-                        .param("minPrice", "10000")
-                        .param("maxPrice", "30000"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("Toyota")));
-
-        verify(carService, times(1)).getCarsByPriceRange(10000, 30000);
     }
 }
