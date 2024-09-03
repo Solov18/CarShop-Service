@@ -2,187 +2,110 @@ package controllerTest;
 
 import org.example.controller.OrderController;
 import org.example.dto.OrderDTO;
-import org.example.exception.DatabaseException;
 import org.example.exception.InvalidOrderDataException;
 import org.example.exception.OrderNotFoundException;
 import org.example.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.sql.SQLException;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-class OrderControllerTest {
 
-    @Mock
+@WebMvcTest(OrderController.class)
+public class OrderControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
     private OrderService orderService;
 
-    @InjectMocks
-    private OrderController orderController;
+    @Test
+    public void testCreateOrderSuccess() throws Exception {
+        OrderDTO orderDTO = new OrderDTO(1, "New Order", "details", 1);
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+        Mockito.when(orderService.createOrder(any(OrderDTO.class))).thenReturn(orderDTO);
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1,\"name\":\"New Order\",\"details\":\"details\",\"status\":1}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(orderDTO.getId()))
+                .andExpect(jsonPath("$.name").value(orderDTO.getClientUsername()))
+                .andExpect(jsonPath("$.details").value(orderDTO.getClientUsername()))
+                .andExpect(jsonPath("$.status").value(orderDTO.getStatus()));
     }
 
-    /**
-     * Тест для успешного создания заказа.
-     * Ожидается, что контроллер вернет статус 201 Created и созданный объект заказа.
-     */
     @Test
-    void testCreateOrder_Success() throws Exception {
-        // Мокируем создание заказа
-        OrderDTO orderDTO = new OrderDTO(1, "Item 1", "New", 100);
-        when(orderService.createOrder(any(OrderDTO.class))).thenReturn(orderDTO);
+    public void testCreateOrderInvalidData() throws Exception {
+        Mockito.when(orderService.createOrder(any(OrderDTO.class))).thenThrow(new InvalidOrderDataException("Invalid data"));
 
-        // Выполняем запрос создания заказа
-        ResponseEntity<OrderDTO> response = orderController.createOrder(orderDTO);
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(orderDTO, response.getBody());
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1,\"name\":\"\",\"details\":\"\",\"status\":1}")) // Добавлено поле "status"
+                .andExpect(status().isBadRequest());
     }
 
-    /**
-     * Тест для обработки ошибки базы данных при создании заказа.
-     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
-     */
     @Test
-    void testCreateOrder_DatabaseError() throws Exception {
-        // Мокируем выброс DatabaseException
-        when(orderService.createOrder(any(OrderDTO.class))).thenThrow(new Exception());
+    public void testGetOrderByIdSuccess() throws Exception {
+        OrderDTO orderDTO = new OrderDTO(1, "Order", "details", 1);
 
-        // Выполняем запрос создания заказа
-        ResponseEntity<OrderDTO> response = orderController.createOrder(new OrderDTO());
+        Mockito.when(orderService.getOrderById(1)).thenReturn(orderDTO);
 
-        // Проверяем ответ
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNull(response.getBody());
+        mockMvc.perform(get("/api/orders/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(orderDTO.getId()))
+                .andExpect(jsonPath("$.name").value(orderDTO.getClientUsername()))
+                .andExpect(jsonPath("$.details").value(orderDTO.getClientUsername()))
+                .andExpect(jsonPath("$.status").value(orderDTO.getStatus()));
     }
 
-    /**
-     * Тест для обработки ошибки данных при создании заказа.
-     * Ожидается, что контроллер вернет статус 400 Bad Request.
-     */
     @Test
-    void testCreateOrder_InvalidDataError() throws Exception {
-        // Мокируем выброс InvalidOrderDataException
-        when(orderService.createOrder(any(OrderDTO.class))).thenThrow(new InvalidOrderDataException("Invalid order data"));
+    public void testGetOrderByIdNotFound() throws Exception {
+        Mockito.when(orderService.getOrderById(1)).thenThrow(new OrderNotFoundException("Order not found"));
 
-        // Выполняем запрос создания заказа
-        ResponseEntity<OrderDTO> response = orderController.createOrder(new OrderDTO());
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNull(response.getBody());
+        mockMvc.perform(get("/api/orders/1"))
+                .andExpect(status().isNotFound());
     }
 
-    /**
-     * Тест для успешного получения заказа по идентификатору.
-     * Ожидается, что контроллер вернет статус 200 OK и объект заказа.
-     */
     @Test
-    void testGetOrderById_Success() throws Exception {
-        // Мокируем получение заказа
-        OrderDTO orderDTO = new OrderDTO(1, "Item 1", "New", 100);
-        when(orderService.getOrderById(1)).thenReturn(orderDTO);
+    public void testUpdateOrderStatusSuccess() throws Exception {
+        Mockito.when(orderService.updateOrderStatus(eq(1), eq("shipped"))).thenReturn(true);
 
-        // Выполняем запрос получения заказа
-        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(orderDTO, response.getBody());
+        mockMvc.perform(put("/api/orders/1")
+                        .param("status", "shipped"))
+                .andExpect(status().isNoContent());
     }
 
-    /**
-     * Тест для обработки случая, когда заказ не найден.
-     * Ожидается, что контроллер вернет статус 404 Not Found.
-     */
     @Test
-    void testGetOrderById_NotFound() throws Exception {
-        // Мокируем выброс OrderNotFoundException
-        when(orderService.getOrderById(1)).thenThrow(new OrderNotFoundException("Order not found"));
+    public void testUpdateOrderStatusNotFound() throws Exception {
+        Mockito.when(orderService.updateOrderStatus(eq(1), eq("shipped"))).thenThrow(new OrderNotFoundException("Order not found"));
 
-        // Выполняем запрос получения заказа
-        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        mockMvc.perform(put("/api/orders/1")
+                        .param("status", "shipped"))
+                .andExpect(status().isNotFound());
     }
 
-    /**
-     * Тест для обработки ошибки базы данных при получении заказа.
-     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
-     */
     @Test
-    void testGetOrderById_DatabaseError() throws Exception {
-        // Мокируем выброс DatabaseException
-        when(orderService.getOrderById(1)).thenThrow(new Exception("Database error"));
+    public void testUpdateOrderStatusDatabaseError() throws Exception {
+        Mockito.when(orderService.updateOrderStatus(eq(1), eq("shipped"))).thenThrow(new SQLException("Database error"));
 
-        // Выполняем запрос получения заказа
-        ResponseEntity<OrderDTO> response = orderController.getOrderById(1);
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    /**
-     * Тест для успешного обновления статуса заказа.
-     * Ожидается, что контроллер вернет статус 204 No Content.
-     */
-    @Test
-    void testUpdateOrderStatus_Success() throws Exception {
-        // Мокируем успешное обновление
-        when(orderService.updateOrderStatus(1, "Shipped")).thenReturn(true);
-
-        // Выполняем запрос обновления статуса заказа
-        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    /**
-     * Тест для обработки случая, когда заказ не найден при обновлении статуса.
-     * Ожидается, что контроллер вернет статус 404 Not Found.
-     */
-    @Test
-    void testUpdateOrderStatus_NotFound() throws Exception {
-        // Мокируем выброс OrderNotFoundException
-        when(orderService.updateOrderStatus(1, "Shipped")).thenThrow(new OrderNotFoundException("Order not found"));
-
-        // Выполняем запрос обновления статуса заказа
-        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    /**
-     * Тест для обработки ошибки базы данных при обновлении статуса заказа.
-     * Ожидается, что контроллер вернет статус 500 Internal Server Error.
-     */
-    @Test
-    void testUpdateOrderStatus_DatabaseError() throws Exception {
-        // Мокируем выброс DatabaseException
-        when(orderService.updateOrderStatus(1, "Shipped")).thenThrow(new Exception("Database error"));
-
-        // Выполняем запрос обновления статуса заказа
-        ResponseEntity<Void> response = orderController.updateOrderStatus(1, "Shipped");
-
-        // Проверяем ответ
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNull(response.getBody());
+        mockMvc.perform(put("/api/orders/1")
+                        .param("status", "shipped"))
+                .andExpect(status().isInternalServerError());
     }
 }

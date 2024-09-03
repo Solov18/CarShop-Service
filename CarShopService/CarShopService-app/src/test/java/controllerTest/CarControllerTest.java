@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -19,27 +20,20 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
 @WebMvcTest(CarController.class)
 public class CarControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private CarService carService;
 
-    @InjectMocks
-    private CarController carController;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        this.mockMvc = MockMvcBuilders.standaloneSetup(carController).build();
-    }
-
     @Test
     public void testGetCars() throws Exception {
-        CarDTO car1 = new CarDTO(1, "Toyota", "Camry", 2020, 25000.0, "New",true);
-        CarDTO car2 = new CarDTO(2, "Honda", "Accord", 2019, 22000.0, "New",true);
+        CarDTO car1 = new CarDTO(1, "Toyota", "Camry", 2020, 25000.0, "New", true);
+        CarDTO car2 = new CarDTO(2, "Honda", "Accord", 2019, 22000.0, "New", true);
 
         given(carService.getAllAvailableCars()).willReturn(Arrays.asList(car1, car2));
 

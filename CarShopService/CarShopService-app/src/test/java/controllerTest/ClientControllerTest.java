@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,30 +24,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ClientController.class)
 public class ClientControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private UserService userService;
 
-    @InjectMocks
-    private ClientController clientController;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        this.mockMvc = MockMvcBuilders.standaloneSetup(clientController).build();
-    }
-
     @Test
     public void testGetAllClients() throws Exception {
-        // Prepare data
-        ClientDTO client1 = new ClientDTO(1, "John Doe","Клиент", "john.doe@example.com", 5);
-        ClientDTO client2 = new ClientDTO(2, "Jane Smith","Клиент", "jane.smith@example.com", 10);
+
+        ClientDTO client1 = new ClientDTO(1, "John Doe", "Клиент", "john.doe@example.com", 5);
+        ClientDTO client2 = new ClientDTO(2, "Jane Smith", "Клиент", "jane.smith@example.com", 10);
         List<ClientDTO> clientList = Arrays.asList(client1, client2);
 
-        // Mocking service response
-        given(userService.getAllClients()).willReturn(clientList);
 
+        given(userService.getAllClients()).willReturn(clientList);
 
         mockMvc.perform(get("/api/clients"))
                 .andExpect(status().isOk())
@@ -58,13 +50,12 @@ public class ClientControllerTest {
 
     @Test
     public void testFilterClientsByName() throws Exception {
-        // Prepare data
+
         ClientDTO client = new ClientDTO(1, "John Doe","Клиент", "john.doe@example.com", 5);
 
-        // Mocking service response
+
         given(userService.filterClientsByName("John")).willReturn(List.of(client));
 
-        // Perform request and verify response
         mockMvc.perform(get("/api/clients")
                         .param("action", "filterByName")
                         .param("name", "John"))

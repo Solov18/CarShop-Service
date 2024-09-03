@@ -6,219 +6,227 @@ import org.example.dto.AuthenticationDTO;
 import org.example.dto.ClientDTO;
 import org.example.dto.UserDTO;
 import org.example.exception.ClientNotFoundException;
-import org.example.exception.UserAlreadyExistsException;
 import org.example.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Тесты для контроллера пользователей {@link UserController}.
- * Проверяют функциональность методов контроллера, включая обработку исключений.
- */
-@SpringJUnitConfig
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(UserController.class)
 public class UserControllerTest {
 
-    @InjectMocks
-    private UserController userController;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private UserService userService;
 
-    @Mock
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public void setup() {
+        objectMapper = new ObjectMapper();
     }
 
-    /**
-     * Тестирование получения всех пользователей.
-     * Проверяет успешный сценарий, когда метод {@code getAllUsers()} возвращает список пользователей.
-     */
     @Test
-    void testGetAllUsers_Success() throws SQLException {
-        List<UserDTO> userDTOs = new ArrayList<>();
-        userDTOs.add(new UserDTO("user1", "pass1"));
-        userDTOs.add(new UserDTO("user2", "pass2"));
+    public void testGetAllUsersSuccess() throws Exception {
+        List<UserDTO> userDTOs = Collections.singletonList(new UserDTO("user1", "role"));
 
-        when(userService.getAllUsers()).thenReturn(userDTOs);
+        Mockito.when(userService.getAllUsers()).thenReturn(userDTOs);
 
-        ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDTOs, response.getBody());
+        mockMvc.perform(get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("user1"))
+                .andExpect(jsonPath("$[0].role").value("role"));
     }
 
-    /**
-     * Тестирование получения всех клиентов.
-     * Проверяет успешный сценарий, когда метод {@code getAllClients()} возвращает список клиентов.
-     */
     @Test
-    void testGetAllClients_Success() throws SQLException {
-        List<ClientDTO> clientDTOs = new ArrayList<>();
-        clientDTOs.add(new ClientDTO("client1", 1));
-        clientDTOs.add(new ClientDTO("client2", 1));
+    public void testGetAllUsersDatabaseError() throws Exception {
+        Mockito.when(userService.getAllUsers()).thenThrow(new SQLException("Database error"));
 
-        when(userService.getAllClients()).thenReturn(clientDTOs);
-
-        ResponseEntity<List<ClientDTO>> response = userController.getAllClients();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(clientDTOs, response.getBody());
+        mockMvc.perform(get("/api/users"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Database error"));
     }
 
-    /**
-     * Тестирование получения клиента по имени пользователя.
-     * Проверяет успешный сценарий, когда клиент найден.
-     */
     @Test
-    void testGetClientByUsername_Success() throws SQLException, ClientNotFoundException {
-        ClientDTO clientDTO = new ClientDTO("client1", 1);
+    public void testGetAllClientsSuccess() throws Exception {
+        List<ClientDTO> clientDTOs = Collections.singletonList(new ClientDTO(1, "user1", "Клиент", "contact", 5));
 
-        when(userService.getClientByUsername(anyString())).thenReturn(clientDTO);
+        Mockito.when(userService.getAllClients()).thenReturn(clientDTOs);
 
-        ResponseEntity<?> response = userController.getClientByUsername("client1");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(clientDTO, response.getBody());
+        mockMvc.perform(get("/api/users/clients"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].username").value("user1"))
+                .andExpect(jsonPath("$[0].contactInfo").value("contact"))
+                .andExpect(jsonPath("$[0].orderCount").value(5));
     }
 
-    /**
-     * Тестирование получения клиента по имени пользователя, когда клиент не найден.
-     * Проверяет обработку исключения {@code ClientNotFoundException}.
-     */
     @Test
-    void testGetClientByUsername_ClientNotFound() throws SQLException, ClientNotFoundException {
-        when(userService.getClientByUsername(anyString())).thenThrow(new ClientNotFoundException("Client not found"));
+    public void testGetAllClientsDatabaseError() throws Exception {
+        Mockito.when(userService.getAllClients()).thenThrow(new SQLException("Database error"));
 
-        ResponseEntity<?> response = userController.getClientByUsername("nonexistent");
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Client not found", response.getBody());
+        mockMvc.perform(get("/api/users/clients"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Database error"));
     }
 
-    /**
-     * Тестирование регистрации нового пользователя.
-     * Проверяет успешный сценарий регистрации пользователя.
-     */
     @Test
-    void testRegisterUser_Success() throws SQLException, UserAlreadyExistsException {
-        AuthenticationDTO authenticationDTO = new AuthenticationDTO();
+    public void testGetClientByUsernameSuccess() throws Exception {
+        ClientDTO clientDTO = new ClientDTO(1, "user1", "Клиент", "contact", 5);
 
-        ResponseEntity<String> response = userController.registerUser(authenticationDTO);
+        Mockito.when(userService.getClientByUsername("user1")).thenReturn(clientDTO);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("User registered", response.getBody());
+        mockMvc.perform(get("/api/users/client")
+                        .param("username", "user1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.contactInfo").value("contact"))
+                .andExpect(jsonPath("$.orderCount").value(5));
     }
 
-    /**
-     * Тестирование регистрации нового пользователя, когда пользователь уже существует.
-     * Проверяет обработку исключения {@code UserAlreadyExistsException}.
-     */
     @Test
-    void testRegisterUser_UserAlreadyExists() throws SQLException, UserAlreadyExistsException {
-        AuthenticationDTO authenticationDTO = new AuthenticationDTO();
-        ResponseEntity<String> response = userController.registerUser(authenticationDTO);
+    public void testGetClientByUsernameNotFound() throws Exception {
+        Mockito.when(userService.getClientByUsername("user1")).thenThrow(new ClientNotFoundException("Client not found"));
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("User already exists", response.getBody());
+        mockMvc.perform(get("/api/users/client")
+                        .param("username", "user1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Client not found"));
     }
 
-    /**
-     * Тестирование аутентификации пользователя.
-     * Проверяет успешный сценарий, когда аутентификация проходит успешно.
-     */
     @Test
-    void testAuthenticate_Success() throws SQLException {
-        AuthenticationDTO authDTO = new AuthenticationDTO();
-        UserDTO userDTO = new UserDTO("user1", "pass1");
+    public void testRegisterUserSuccess() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
 
-        when(userService.authenticate(anyString(), anyString())).thenReturn(userDTO);
-
-        ResponseEntity<?> response = userController.authenticate(authDTO);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDTO, response.getBody());
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(content().string("Пользователь зарегистрирован"));
     }
 
-    /**
-     * Тестирование аутентификации пользователя, когда учетные данные неверные.
-     * Проверяет обработку случая, когда аутентификация не удается.
-     */
     @Test
-    void testAuthenticate_Unauthorized() throws SQLException {
-        AuthenticationDTO authDTO = new AuthenticationDTO();
+    public void testRegisterUserConflict() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
 
-        when(userService.authenticate(anyString(), anyString())).thenReturn(null);
-
-        ResponseEntity<?> response = userController.authenticate(authDTO);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("Неверное имя пользователя или пароль", response.getBody());
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("User already exists"));
     }
 
-    /**
-     * Тестирование увеличения количества заказов пользователя.
-     * Проверяет успешный сценарий увеличения количества заказов.
-     */
     @Test
-    void testIncreaseOrders_Success() throws SQLException {
-        ResponseEntity<String> response = userController.increaseOrders("user1");
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Количество заказов увеличено", response.getBody());
+    public void testRegisterUserDatabaseError() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
+
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Ошибка регистрации пользователя"));
     }
 
-    /**
-     * Тестирование удаления пользователя.
-     * Проверяет успешный сценарий удаления пользователя.
-     */
     @Test
-    void testDeleteUser_Success() throws SQLException {
-        when(userService.userExists(anyString())).thenReturn(true);
+    public void testAuthenticateSuccess() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
+        UserDTO userDTO = new UserDTO("user1", "role");
 
-        ResponseEntity<String> response = userController.deleteUser("user1");
+        Mockito.when(userService.authenticate("user1", "password")).thenReturn(userDTO);
 
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        mockMvc.perform(post("/api/users/authenticate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.role").value("role"));
     }
 
-    /**
-     * Тестирование удаления пользователя, когда пользователь не найден.
-     * Проверяет обработку случая, когда пользователь не существует.
-     */
     @Test
-    void testDeleteUser_NotFound() throws SQLException {
-        when(userService.userExists(anyString())).thenReturn(false);
+    public void testAuthenticateUnauthorized() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
 
-        ResponseEntity<String> response = userController.deleteUser("nonexistent");
+        Mockito.when(userService.authenticate("user1", "password")).thenReturn(null);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Пользователь не найден", response.getBody());
+        mockMvc.perform(post("/api/users/authenticate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Неверное имя пользователя или пароль"));
     }
 
-    /**
-     * Тестирование обработки SQL исключения при получении всех пользователей.
-     * Проверяет правильную обработку исключений при ошибке базы данных.
-     */
     @Test
-    void testGetAllUsers_SqlException() throws SQLException {
-        when(userService.getAllUsers()).thenThrow(new SQLException("Database error"));
+    public void testAuthenticateDatabaseError() throws Exception {
+        AuthenticationDTO authDTO = new AuthenticationDTO("user1", "password", "Клиент");
 
-        ResponseEntity<List<UserDTO>> response = userController.getAllUsers();
+        Mockito.when(userService.authenticate("user1", "password")).thenThrow(new SQLException("Database error"));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(null, response.getBody());
+        mockMvc.perform(post("/api/users/authenticate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(authDTO)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Ошибка аутентификации"));
+    }
+
+    @Test
+    public void testIncreaseOrdersSuccess() throws Exception {
+        mockMvc.perform(put("/api/users/increaseOrders")
+                        .param("username", "user1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Количество заказов увеличено"));
+    }
+
+    @Test
+    public void testIncreaseOrdersDatabaseError() throws Exception {
+        Mockito.doThrow(new SQLException("Database error")).when(userService).increaseOrderCount("user1");
+
+        mockMvc.perform(put("/api/users/increaseOrders")
+                        .param("username", "user1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Ошибка обновления количества заказов"));
+    }
+
+    @Test
+    public void testDeleteUserSuccess() throws Exception {
+        Mockito.when(userService.userExists("user1")).thenReturn(true);
+
+        mockMvc.perform(delete("/api/users")
+                        .param("username", "user1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testDeleteUserNotFound() throws Exception {
+        Mockito.when(userService.userExists("user1")).thenReturn(false);
+
+        mockMvc.perform(delete("/api/users")
+                        .param("username", "user1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Пользователь не найден"));
+    }
+
+    @Test
+    public void testDeleteUserDatabaseError() throws Exception {
+        Mockito.when(userService.userExists("user1")).thenReturn(true);
+        Mockito.doThrow(new SQLException("Database error")).when(userService).removeUser("user1");
+
+        mockMvc.perform(delete("/api/users")
+                        .param("username", "user1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Ошибка удаления пользователя"));
     }
 }
