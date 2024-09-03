@@ -6,13 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="cb4e3ad3-bab7-48ef-8716-3c261d8ac381" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/ClientDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/dto/ClientDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dto/OrderDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/dto/OrderDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/CarControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/controllerTest/CarControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/ClientControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/controllerTest/ClientControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/OrderControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/controllerTest/OrderControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/controllerTest/UserControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/controllerTest/UserControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/CarControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/CarControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/ClientControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/ClientControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/OrderControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/OrderControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/UserControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/CarShopService-app/src/test/java/controllerTest/UserControllerTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,17 +42,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Admin/Desktop/3 lp/CarShop-Service-Ylab/CarShopService&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "jdk.selected.JAVA_MODULE": "17",
+    "last_opened_file_path": "C:/Users/Admin/Desktop/3 lp/CarShop-Service-Ylab/CarShopService",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.importing"
   }
-}</component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

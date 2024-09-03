@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: /db/changelog/users-schema.yaml
+  - include:
+      file: /db/changelog/cars-tables.yaml
+  - include:
+      file: /db/changelog/orders-tables.yaml
+  - include:
+      file: /db/changelog/changelog-data.yaml
+  - include:
+      file: /db/changelog/audit-log-table.yaml
